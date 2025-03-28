@@ -1,0 +1,28 @@
+<?php
+
+namespace DummyNamespace;
+
+use Illuminate\Database\Seeder;
+use Riftweb\SuperSeeder\Traits\TrackableSeed;
+
+class DummySeeder extends Seeder
+{
+    use TrackableSeed;
+
+     public function run()
+        {
+            if (!$this->shouldRun()) {
+                return;
+            }
+
+            // Your seeding logic here
+
+            $this->markAsRun();
+        }
+
+        public function rollback(): void
+        {
+            // Custom rollback logic
+            $this->info('Rolled back users!');
+        }
+}
