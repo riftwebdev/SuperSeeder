@@ -16,7 +16,7 @@ class RiftSuperSeederServiceProvider extends ServiceProvider
     {
         // Merge config
         $this->mergeConfigFrom(
-            __DIR__.'/../config/superseeder.php', 'superseeder'
+            __DIR__.'/../Config/superseeder.php', 'superseeder'
         );
 
         // Register commands
