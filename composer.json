@@ -3,7 +3,7 @@
     "description": "Supercharge your Laravel database seeding with execution tracking and rollbacks! This package adds migration-like behavior to seeders, preventing duplicate runs while enabling batch management and safe rollback of seeded data. Perfect for production environments and complex seeding workflows.",
     "license": "MIT",
     "keywords": [
-        'riftweb',
+        "riftweb",
         "laravel",
         "database seeder",
         "seeder tracking",
@@ -23,7 +23,7 @@
             "role": "CEO"
         }
     ],
-    "homepage": "https://gitlab.com/riftwebdev/superseeder",
+    "homepage": "https://github.com/riftwebdev/superseeder",
     "require": {
         "php": "^8.0",
         "illuminate/support": "^8.0|^9.0|^10.0",
