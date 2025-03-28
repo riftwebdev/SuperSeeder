@@ -1,7 +1,7 @@
 # SuperSeeder 🚀
 
 [![Latest Version](https://img.shields.io/github/v/release/riftweb/superseeder?style=flat-square)](https://packagist.org/packages/riftweb/superseeder)
-[![License](https://img.shields.io/github/license/riftweb/superseeder?style=flat-square)](https://github.com/riftwebdev/superseeder/blob/main/LICENSE.md)
+[![License](https://img.shields.io/github/license/riftweb/superseeder?style=flat-square)](https://github.com/riftwebdev/SuperSeeder/blob/main/LICENSE.md)
 
 A robust database seeder solution for Laravel with execution tracking and rollback capabilities. Brings migration-like behavior to your seeders! 🔄
 
