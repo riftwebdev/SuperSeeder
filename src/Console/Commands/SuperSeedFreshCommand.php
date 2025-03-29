@@ -3,6 +3,7 @@
 namespace Riftweb\SuperSeeder\Console\Commands;
 
 use Illuminate\Console\Command;
+
 class SuperSeedFreshCommand extends Command
 {
     protected $name = 'superseed:fresh';

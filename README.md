@@ -48,24 +48,14 @@ class UsersSeeder extends Seeder
 {
     use TrackableSeed;
 
-    public function run()
+    public function up()
     {
-        // Mandatory check
-        if (!$this->shouldRun()) {
-            return;
-        }
-
-        // Your seeding logic
-        \App\Models\User::factory(10)->create();
-        
-        // Mandatory tracking
-        $this->markAsRun(); // ← Don't forget this!
+        // Your seeder logic
     }
 
-    public function rollback(): void
+    public function down(): void
     {
         // Your rollback logic
-        \App\Models\User::truncate();
     }
 }
 ```
@@ -100,13 +90,8 @@ SUPERSEED_BYPASS=true
     - Batch number
     - Execution timestamp
 
-2. **Execution Flow**
-    - `shouldRun()` checks if seeder exists in `seeder_executions`
-    - `markAsRun()` creates tracking record
-    - Batches group seeders run together
-
-3. **Rollback Process**
-    - Calls `rollback()` method on each seeder
+2. **Rollback Process**
+    - Calls `down()` method on each seeder
     - Deletes tracking records for the batch
     - Runs in reverse order of execution
 
@@ -116,7 +101,7 @@ SUPERSEED_BYPASS=true
 # 1. Create seeder
 php artisan make:superseeder UsersSeeder
 
-# 2. Implement run() and rollback() methods
+# 2. Implement up() and down() methods
 
 # 3. Run seeders
 php artisan superseed
@@ -125,10 +110,36 @@ php artisan superseed
 php artisan superseed:rollback
 ```
 
+## Commands 🛠️
+
+##### Create trackable seeder
+```bash
+php artisan make:superseeder SeederName
+```
+
+##### Run seeders
+```bash
+php artisan superseed
+```
+
+##### Rollback seeders
+```bash
+php artisan superseed:rollback
+```
+
+##### Clear all seeder records
+```bash
+php artisan superseed:fresh
+```
+
+##### Clear all seeder records and rollback
+```bash
+php artisan superseed:clear
+```
+
+
 ## Important Notes ⚠️
 
-- **Always include** `shouldRun()` check and `markAsRun()`
-- **Without** `markAsRun()`, seeder will run every time
 - **Test rollbacks** thoroughly before production use
 - **Backup database** before running seeders
 
