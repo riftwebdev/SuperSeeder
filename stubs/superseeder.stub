@@ -9,20 +9,13 @@ class DummySeeder extends Seeder
 {
     use TrackableSeed;
 
-     public function run()
+        public function up()
         {
-            if (!$this->shouldRun()) {
-                return;
-            }
-
             // Your seeding logic here
-
-            $this->markAsRun();
         }
 
-        public function rollback(): void
+        public function down(): void
         {
             // Custom rollback logic
-            $this->info('Rolled back users!');
         }
 }
