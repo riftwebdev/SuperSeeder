@@ -3,20 +3,20 @@
 namespace Riftweb\SuperSeeder\Console\Commands;
 
 use Illuminate\Console\Command;
-use Riftweb\SuperSeeder\Models\SeederExecution;
 use Riftweb\SuperSeeder\Services\SeederExecutionService;
 use Riftweb\SuperSeeder\Services\SeederExecutorService;
+use Throwable;
 
 class SuperSeedCommand extends Command
 {
-    protected $name = 'superseed';
-    protected $description = 'Run all pending seeders';
-    protected $signature = 'superseed {--force : Bypass tracking checks}';
+    protected string $name = 'superseed';
+    protected string $description = 'Run all pending seeders';
+    protected string $signature = 'superseed {--force : Bypass tracking checks}';
 
     public function handle(
         SeederExecutionService $seederExecutionService,
         SeederExecutorService $executor
-    )
+    ): void
     {
         $executor->setForce($this->option('force'));
 
@@ -54,7 +54,7 @@ class SuperSeedCommand extends Command
             $executed = $seederExecutionService->mapBatchForConsoleTable($executor->currentBatch());
 
             $this->displaySuccessMessage($executed);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->handleExecutionError($e);
         }
     }
@@ -69,7 +69,7 @@ class SuperSeedCommand extends Command
         );
     }
 
-    protected function handleExecutionError(\Throwable $e): void
+    protected function handleExecutionError(Throwable $e): void
     {
         $this->error("Seeder failed: " . $e->getMessage());
         report($e);

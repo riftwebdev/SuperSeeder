@@ -15,7 +15,7 @@ use Riftweb\SuperSeeder\Services\SeederExecutorService;
 
 class RiftSuperSeederServiceProvider extends ServiceProvider
 {
-    public function register()
+    public function register(): void
     {
         // Merge config
         $this->mergeConfigFrom(
@@ -45,7 +45,8 @@ class RiftSuperSeederServiceProvider extends ServiceProvider
             );
         });
     }
-    public function boot()
+
+    public function boot(): void
     {
         // Load migrations (adjust path if needed)
         $this->loadMigrationsFrom(__DIR__.'/../Database/Migrations');

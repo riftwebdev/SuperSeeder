@@ -5,7 +5,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class SeederExecution extends Model
 {
-    protected $table = 'seeder_executions';
+    protected string $table = 'seeder_executions';
 
-    protected $fillable = ['seeder', 'batch'];
+    protected array $fillable = ['seeder', 'batch'];
+
+    public function casts(): array
+    {
+        return [
+            'batch' => 'int'
+        ];
+    }
 }

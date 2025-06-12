@@ -5,6 +5,7 @@ namespace Riftweb\SuperSeeder\Services;
 use Illuminate\Support\Collection;
 use Riftweb\SuperSeeder\Models\SeederExecution;
 use Riftweb\SuperSeeder\Repositories\SeederExecutionRepository;
+use Throwable;
 
 class SeederExecutionService
 {
@@ -64,7 +65,7 @@ class SeederExecutionService
                     return str($seederPath)->afterLast('\\');
                 })
                 ->toArray();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             return [];
         }

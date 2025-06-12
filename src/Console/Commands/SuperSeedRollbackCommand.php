@@ -3,16 +3,16 @@
 namespace Riftweb\SuperSeeder\Console\Commands;
 
 use Illuminate\Console\Command;
-use Riftweb\SuperSeeder\Models\SeederExecution;
 use Riftweb\SuperSeeder\Services\SeederExecutionService;
 use Riftweb\SuperSeeder\Services\SeederExecutorService;
+use Throwable;
 
 class SuperSeedRollbackCommand extends Command
 {
-    protected $name = 'superseed:rollback';
-    protected $description = 'Rollback the last batch of seeders';
+    protected string $name = 'superseed:rollback';
+    protected string $description = 'Rollback the last batch of seeders';
 
-    public function handle(SeederExecutionService $seederExecutionService, SeederExecutorService $executor)
+    public function handle(SeederExecutionService $seederExecutionService, SeederExecutorService $executor): void
     {
         $batch = $seederExecutionService->getLatestBatch();
 
@@ -25,12 +25,12 @@ class SuperSeedRollbackCommand extends Command
             ->pluck('seeder')
             ->toArray();
 
-        $this->info("Rolling back batch #{$batch} (" . count($seeders) . " seeder(s))");
+        $this->info("Rolling back batch #$batch (" . count($seeders) . " seeder(s))");
 
         try {
             $executor->rollbackBatch($seeders);
             $this->info("\nRollback completed!");
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->error("Rollback failed: " . $e->getMessage());
         }
     }

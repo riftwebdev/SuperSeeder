@@ -57,7 +57,7 @@ trait TrackableSeeder
     protected function logSkipped(): void
     {
         if (app()->runningInConsole()) {
-            (new ConsoleOutput())->writeln('<warning>Skipped:</warning> ' . str(static::class)->afterLast('\\'));
+            (new ConsoleOutput())->writeln('<info>Skipped:</info> ' . str(static::class)->afterLast('\\'));
         }
     }
     protected function logError(): void

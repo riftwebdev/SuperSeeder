@@ -7,9 +7,9 @@ use Symfony\Component\Console\Input\InputArgument;
 
 class MakeSuperSeederCommand extends GeneratorCommand
 {
-    protected $name = 'make:superseeder';
-    protected $description = 'Create a new trackable seeder';
-    protected $type = 'Seeder';
+    protected string $name = 'make:superseeder';
+    protected string $description = 'Create a new trackable seeder';
+    protected string $type = 'Seeder';
 
     protected function getNameInput()
     {
@@ -24,9 +24,9 @@ class MakeSuperSeederCommand extends GeneratorCommand
         if (!file_exists($stubPath)) {
             $this->error("❌ Stub file not found: $stubPath");
             exit(1);
-        } else {
-            $this->info("✅ Stub found at: $stubPath");
         }
+
+        $this->info("✅ Stub found at: $stubPath");
 
         return $stubPath;
     }
@@ -59,9 +59,7 @@ class MakeSuperSeederCommand extends GeneratorCommand
 
         // Perform replacements in stub
         $stub = str_replace('DummySeeder', $className, $stub);
-        $stub = str_replace('DummyNamespace', $namespace, $stub);
-
-        return $stub;
+        return str_replace('DummyNamespace', $namespace, $stub);
     }
 
     protected function replaceNamespace(&$stub, $name)
