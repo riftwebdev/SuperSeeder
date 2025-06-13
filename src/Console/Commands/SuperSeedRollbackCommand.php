@@ -14,7 +14,7 @@ class SuperSeedRollbackCommand extends Command
 
     public function handle(
         SeederExecutionService $seederExecutionService,
-        SeederExecutorService  $executor
+        SeederExecutorService $seederExecutorService
     ): void
     {
         $batch = $seederExecutionService->getLatestBatch();
@@ -31,7 +31,7 @@ class SuperSeedRollbackCommand extends Command
         $this->info("Rolling back batch #$batch (" . count($seeders) . " seeder(s))");
 
         try {
-            $executor->rollbackBatch($seeders);
+            $seederExecutorService->rollbackBatch($seeders);
             $this->info("\nRollback completed!");
         } catch (Throwable $e) {
             $this->error("Rollback failed: " . $e->getMessage());

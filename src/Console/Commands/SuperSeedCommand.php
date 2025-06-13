@@ -15,12 +15,12 @@ class SuperSeedCommand extends Command
 
     public function handle(
         SeederExecutionService $seederExecutionService,
-        SeederExecutorService $executor
+        SeederExecutorService $seederExecutorService
     ): void
     {
-        $executor->setForce($this->option('force'));
+        $seederExecutorService->setForce($this->option('force'));
 
-        $pendingSeeders = $executor->getPendingSeeders();
+        $pendingSeeders = $seederExecutorService->getPendingSeeders();
 
         if (empty($pendingSeeders)) {
             $this->info('No seeders to run.');
@@ -28,7 +28,7 @@ class SuperSeedCommand extends Command
         }
 
         $this->displayPendingCount($pendingSeeders);
-        $this->executeSeeders($seederExecutionService, $executor, $pendingSeeders);
+        $this->executeSeeders($seederExecutionService, $seederExecutorService, $pendingSeeders);
     }
 
     protected function displayPendingCount(array $pendingSeeders): void

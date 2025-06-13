@@ -7,16 +7,16 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('seeder_executions', function (Blueprint $table) {
+        Schema::create(config('superseeder.table'), function (Blueprint $table) {
             $table->id();
             $table->string('seeder')->index();
             $table->integer('batch')->index();
-            $table->timestamps();
+            $table->timestamp('created_at')->useCurrent();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('seeder_executions');
+        Schema::dropIfExists(config('superseeder.table'));
     }
 };
