@@ -2,14 +2,23 @@
 
 namespace Riftweb\SuperSeeder\Traits;
 
-use Riftweb\SuperSeeder\Models\SeederExecution;
 use Symfony\Component\Console\Output\ConsoleOutput;
+use Throwable;
 
 
 trait TrackableSeeder
 {
-    abstract protected function up(): void;
-    abstract public function down(): void;
+    public function run(): void
+    {
+        if (!$this->shouldRun()) {
+            return;
+        }
+
+        $this->up();
+
+        $this->markAsRun();
+    }
+
     public function shouldRun(): bool
     {
         $executor = app('superseeder.executor');
@@ -19,17 +28,7 @@ trait TrackableSeeder
         return $bypass || $service->seederDoesntExists(static::class);
     }
 
-    public function run(): void
-    {
-        if (!$this->shouldRun()) {
-            $this->logSkipped();
-            return;
-        }
-
-        $this->up();
-
-        $this->markAsRun();
-    }
+    abstract protected function up(): void;
 
     public function markAsRun(): void
     {
@@ -40,7 +39,7 @@ trait TrackableSeeder
             $service->store(static::class, $executor->currentBatch());
 
             $this->logExecuted();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             $this->logError();
             $this->down();
@@ -54,16 +53,12 @@ trait TrackableSeeder
         }
     }
 
-    protected function logSkipped(): void
-    {
-        if (app()->runningInConsole()) {
-            (new ConsoleOutput())->writeln('<info>Skipped:</info> ' . str(static::class)->afterLast('\\'));
-        }
-    }
     protected function logError(): void
     {
         if (app()->runningInConsole()) {
             (new ConsoleOutput())->writeln('<error>ERROR:</error> ' . str(static::class)->afterLast('\\'));
         }
     }
+
+    abstract public function down(): void;
 }

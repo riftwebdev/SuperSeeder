@@ -9,8 +9,8 @@ use Riftweb\SuperSeeder\Services\SeederExecutorService;
 
 class SuperSeedClearCommand extends Command
 {
-    protected string $name = 'superseed:clear';
-    protected string $description = 'Clear all seeder tracking records';
+    protected $name = 'superseed:clear';
+    protected $description = 'Clear all seeder tracking records';
 
     public function handle(SeederExecutorService $seederExecutorService): void
     {

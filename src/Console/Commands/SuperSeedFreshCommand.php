@@ -6,8 +6,8 @@ use Illuminate\Console\Command;
 
 class SuperSeedFreshCommand extends Command
 {
-    protected string $name = 'superseed:fresh';
-    protected string $description = 'Clear tracking and rerun all seeders';
+    protected $name = 'superseed:fresh';
+    protected $description = 'Clear tracking and rerun all seeders';
 
     public function handle(): void
     {

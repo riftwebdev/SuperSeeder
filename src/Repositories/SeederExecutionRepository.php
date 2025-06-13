@@ -27,33 +27,46 @@ class SeederExecutionRepository
             return 1;
         }
     }
+
     public function getLatestBatch(): int
     {
         try {
-            $batch = SeederExecution::max('batch');
-
-            if (!is_null($batch)) {
-                return $batch;
-            }
+            return SeederExecution::max('batch') ?? 0;
         } catch (Throwable $e) {
             report($e);
+            return 0;
         }
-
-        return 0;
     }
 
     public function seederExists(string $seeder): bool
     {
-        return SeederExecution::where('seeder', $seeder)->exists();
+        try {
+            return SeederExecution::where('seeder', $seeder)->exists();
+        } catch (Throwable $e) {
+            report($e);
+            return false;
+        }
     }
+
     public function seederDoesntExists(string $seeder): bool
     {
-        return SeederExecution::where('seeder', $seeder)->doesntExist();
+        try {
+            return SeederExecution::where('seeder', $seeder)->doesntExist();
+        } catch (Throwable $e) {
+            report($e);
+            return true;
+        }
     }
 
     public function findBySeeder(string $seeder): ?SeederExecution
     {
-        return SeederExecution::where('seeder', $seeder)->first();
+        try {
+            return SeederExecution::where('seeder', $seeder)
+                ->first();
+        } catch (Throwable $e) {
+            report($e);
+            return null;
+        }
     }
 
     public function getByBatch(int $batch): Collection
@@ -70,12 +83,24 @@ class SeederExecutionRepository
 
     public function deleteBySeeder(string $seeder): bool
     {
-        return SeederExecution::where('seeder', $seeder)->delete();
+        try {
+            return SeederExecution::where('seeder', $seeder)
+                ->delete();
+        } catch (Throwable $e) {
+            report($e);
+            return false;
+        }
     }
 
     public function deleteByBatch(int $batch): bool
     {
-        return SeederExecution::where('batch', $batch)->delete();
+        try {
+            return SeederExecution::where('batch', $batch)
+                ->delete();
+        } catch (Throwable $e) {
+            report($e);
+            return false;
+        }
     }
 
     public function all(): Collection

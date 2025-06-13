@@ -34,7 +34,7 @@ class SeederExecutionService
 
     public function truncate(): bool
     {
-       return $this->seederExecutionRepository->truncate();
+        return $this->seederExecutionRepository->truncate();
     }
 
     public function seederDoesntExists(string $seeder): bool
@@ -59,7 +59,6 @@ class SeederExecutionService
     {
         try {
             return $this->getByBatch($batch)
-                ->get()
                 ->pluck('seeder')
                 ->transform(function (string $seederPath) {
                     return str($seederPath)->afterLast('\\');

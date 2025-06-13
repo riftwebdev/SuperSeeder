@@ -9,18 +9,18 @@ use Throwable;
 
 class SuperSeedCommand extends Command
 {
-    protected string $name = 'superseed';
-    protected string $description = 'Run all pending seeders';
-    protected string $signature = 'superseed {--force : Bypass tracking checks}';
+    protected $name = 'superseed';
+    protected $description = 'Run all pending seeders';
+    protected $signature = 'superseed {--force : Bypass tracking checks}';
 
     public function handle(
         SeederExecutionService $seederExecutionService,
-        SeederExecutorService $executor
+        SeederExecutorService  $seederExecutorService
     ): void
     {
-        $executor->setForce($this->option('force'));
+        $seederExecutorService->setForce($this->option('force'));
 
-        $pendingSeeders = $executor->getPendingSeeders();
+        $pendingSeeders = $seederExecutorService->getPendingSeeders();
 
         if (empty($pendingSeeders)) {
             $this->info('No seeders to run.');
@@ -28,30 +28,32 @@ class SuperSeedCommand extends Command
         }
 
         $this->displayPendingCount($pendingSeeders);
-        $this->executeSeeders($seederExecutionService, $executor, $pendingSeeders);
+        $this->executeSeeders($seederExecutionService, $seederExecutorService, $pendingSeeders);
     }
 
     protected function displayPendingCount(array $pendingSeeders): void
     {
-        $this->info(sprintf(
-            'Found %d pending seeder%s...',
-            count($pendingSeeders),
-            count($pendingSeeders) === 1 ? '' : 's'
-        ));
+        $this->info(
+            sprintf(
+                'Found %d pending seeder%s...',
+                count($pendingSeeders),
+                count($pendingSeeders) === 1 ? '' : 's'
+            )
+        );
     }
 
     protected function executeSeeders(
         SeederExecutionService $seederExecutionService,
-        SeederExecutorService $executor,
-        array $pendingSeeders
+        SeederExecutorService  $seederExecutorService,
+        array                  $pendingSeeders
     ): void
     {
         $this->info('Running seeders:');
 
         try {
-            $executor->runSeeders($pendingSeeders);
+            $seederExecutorService->runSeeders($pendingSeeders);
 
-            $executed = $seederExecutionService->mapBatchForConsoleTable($executor->currentBatch());
+            $executed = $seederExecutionService->mapBatchForConsoleTable($seederExecutorService->currentBatch());
 
             $this->displaySuccessMessage($executed);
         } catch (Throwable $e) {
@@ -61,6 +63,11 @@ class SuperSeedCommand extends Command
 
     protected function displaySuccessMessage(array $executedSeeders): void
     {
+        if (empty($executedSeeders)) {
+            $this->info("\nNo seeders were executed.");
+            return;
+        }
+
         $this->info("\nSuccessfully ran seeders:");
 
         $this->table(
