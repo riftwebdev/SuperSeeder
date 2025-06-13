@@ -5,6 +5,7 @@ namespace Riftweb\SuperSeeder\Services;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Laravel\Prompts\Output\ConsoleOutput;
+use Throwable;
 
 class SeederExecutorService
 {
@@ -67,7 +68,7 @@ class SeederExecutorService
             try {
                 $instance = app($seeder);
                 $instance->run();
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 // Rollback executed seeders in this batch on failure
                 $this->rollbackBatch($batch);
                 throw $e;
@@ -75,7 +76,7 @@ class SeederExecutorService
         }
     }
 
-    protected function getNextBatch()
+    protected function getNextBatch(): ?int
     {
         if (is_null(self::$currentBatch)) {
             self::$currentBatch = $this->seederExecutionService->getNextBatch();
@@ -111,7 +112,7 @@ class SeederExecutorService
                     (new ConsoleOutput())->writeln('<info>Rollback:</info> ' . str($seeder)->afterLast('\\'));
                 }
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
 
             if ($appInConsole) {

@@ -4,6 +4,7 @@ namespace Riftweb\SuperSeeder\Repositories;
 
 use Illuminate\Support\Collection;
 use Riftweb\SuperSeeder\Models\SeederExecution;
+use Throwable;
 
 class SeederExecutionRepository
 {
@@ -11,7 +12,7 @@ class SeederExecutionRepository
     {
         try {
             return SeederExecution::create($data);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             return null;
         }
@@ -21,7 +22,7 @@ class SeederExecutionRepository
     {
         try {
             return $this->getLatestBatch() + 1;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             return 1;
         }
@@ -34,7 +35,7 @@ class SeederExecutionRepository
             if (!is_null($batch)) {
                 return $batch;
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
         }
 
@@ -61,7 +62,7 @@ class SeederExecutionRepository
             return SeederExecution::where('batch', $batch)
                 ->orderByDesc('id')
                 ->get();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             return collect();
         }
@@ -81,7 +82,7 @@ class SeederExecutionRepository
     {
         try {
             return SeederExecution::all();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             return collect();
         }
@@ -92,7 +93,7 @@ class SeederExecutionRepository
         try {
             SeederExecution::truncate();
             return true;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             return false;
         }

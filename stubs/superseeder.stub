@@ -3,19 +3,19 @@
 namespace DummyNamespace;
 
 use Illuminate\Database\Seeder;
-use Riftweb\SuperSeeder\Traits\TrackableSeed;
+use Riftweb\SuperSeeder\Traits\TrackableSeeder;
 
 class DummySeeder extends Seeder
 {
-    use TrackableSeed;
+    use TrackableSeeder;
 
-        public function up()
-        {
-            // Your seeding logic here
-        }
+    public function up(): void
+    {
+        // Your seeding logic here
+    }
 
-        public function down(): void
-        {
-            // Custom rollback logic
-        }
+    public function down(): void
+    {
+        // Your rollback logic here
+    }
 }

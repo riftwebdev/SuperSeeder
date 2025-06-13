@@ -9,10 +9,10 @@ use Riftweb\SuperSeeder\Services\SeederExecutorService;
 
 class SuperSeedClearCommand extends Command
 {
-    protected $name = 'superseed:clear';
-    protected $description = 'Clear all seeder tracking records';
+    protected string $name = 'superseed:clear';
+    protected string $description = 'Clear all seeder tracking records';
 
-    public function handle(SeederExecutorService $seederExecutorService)
+    public function handle(SeederExecutorService $seederExecutorService): void
     {
         if ($this->confirm('This will delete all seeder tracking records. Are you sure?')) {
             if ($seederExecutorService->clear()) {
