@@ -14,7 +14,7 @@ class SuperSeedRollbackCommand extends Command
 
     public function handle(
         SeederExecutionService $seederExecutionService,
-        SeederExecutorService $seederExecutorService
+        SeederExecutorService  $seederExecutorService
     ): void
     {
         $batch = $seederExecutionService->getLatestBatch();

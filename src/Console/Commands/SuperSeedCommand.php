@@ -15,7 +15,7 @@ class SuperSeedCommand extends Command
 
     public function handle(
         SeederExecutionService $seederExecutionService,
-        SeederExecutorService $seederExecutorService
+        SeederExecutorService  $seederExecutorService
     ): void
     {
         $seederExecutorService->setForce($this->option('force'));
@@ -44,8 +44,8 @@ class SuperSeedCommand extends Command
 
     protected function executeSeeders(
         SeederExecutionService $seederExecutionService,
-        SeederExecutorService $seederExecutorService,
-        array                 $pendingSeeders
+        SeederExecutorService  $seederExecutorService,
+        array                  $pendingSeeders
     ): void
     {
         $this->info('Running seeders:');
