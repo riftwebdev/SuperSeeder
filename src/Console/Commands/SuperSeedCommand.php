@@ -44,16 +44,16 @@ class SuperSeedCommand extends Command
 
     protected function executeSeeders(
         SeederExecutionService $seederExecutionService,
-        SeederExecutorService $executor,
+        SeederExecutorService $seederExecutorService,
         array                 $pendingSeeders
     ): void
     {
         $this->info('Running seeders:');
 
         try {
-            $executor->runSeeders($pendingSeeders);
+            $seederExecutorService->runSeeders($pendingSeeders);
 
-            $executed = $seederExecutionService->mapBatchForConsoleTable($executor->currentBatch());
+            $executed = $seederExecutionService->mapBatchForConsoleTable($seederExecutorService->currentBatch());
 
             $this->displaySuccessMessage($executed);
         } catch (Throwable $e) {
