@@ -7,9 +7,9 @@ use Symfony\Component\Console\Input\InputArgument;
 
 class MakeSuperSeederCommand extends GeneratorCommand
 {
-    protected string $name = 'make:superseeder';
-    protected string $description = 'Create a new trackable seeder';
-    protected string $type = 'Seeder';
+    protected $name = 'make:superseeder';
+    protected $description = 'Create a new trackable seeder';
+    protected $type = 'Seeder';
 
     protected function getNameInput()
     {

@@ -9,9 +9,9 @@ use Throwable;
 
 class SuperSeedCommand extends Command
 {
-    protected string $name = 'superseed';
-    protected string $description = 'Run all pending seeders';
-    protected string $signature = 'superseed {--force : Bypass tracking checks}';
+    protected $name = 'superseed';
+    protected $description = 'Run all pending seeders';
+    protected $signature = 'superseed {--force : Bypass tracking checks}';
 
     public function handle(
         SeederExecutionService $seederExecutionService,
@@ -33,17 +33,19 @@ class SuperSeedCommand extends Command
 
     protected function displayPendingCount(array $pendingSeeders): void
     {
-        $this->info(sprintf(
-            'Found %d pending seeder%s...',
-            count($pendingSeeders),
-            count($pendingSeeders) === 1 ? '' : 's'
-        ));
+        $this->info(
+            sprintf(
+                'Found %d pending seeder%s...',
+                count($pendingSeeders),
+                count($pendingSeeders) === 1 ? '' : 's'
+            )
+        );
     }
 
     protected function executeSeeders(
         SeederExecutionService $seederExecutionService,
         SeederExecutorService $executor,
-        array $pendingSeeders
+        array                 $pendingSeeders
     ): void
     {
         $this->info('Running seeders:');
@@ -61,6 +63,11 @@ class SuperSeedCommand extends Command
 
     protected function displaySuccessMessage(array $executedSeeders): void
     {
+        if (empty($executedSeeders)) {
+            $this->info("\nNo seeders were executed.");
+            return;
+        }
+
         $this->info("\nSuccessfully ran seeders:");
 
         $this->table(

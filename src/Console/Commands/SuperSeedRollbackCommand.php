@@ -9,10 +9,13 @@ use Throwable;
 
 class SuperSeedRollbackCommand extends Command
 {
-    protected string $name = 'superseed:rollback';
-    protected string $description = 'Rollback the last batch of seeders';
+    protected $name = 'superseed:rollback';
+    protected $description = 'Rollback the last batch of seeders';
 
-    public function handle(SeederExecutionService $seederExecutionService, SeederExecutorService $executor): void
+    public function handle(
+        SeederExecutionService $seederExecutionService,
+        SeederExecutorService  $executor
+    ): void
     {
         $batch = $seederExecutionService->getLatestBatch();
 

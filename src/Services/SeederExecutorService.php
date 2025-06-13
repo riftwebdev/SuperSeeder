@@ -9,14 +9,14 @@ use Throwable;
 
 class SeederExecutorService
 {
+    protected static ?int $currentBatch = null;
+    protected bool $force = false;
+
     public function __construct(
         protected SeederExecutionService $seederExecutionService
     )
     {
     }
-
-    protected static ?int $currentBatch = null;
-    protected bool $force = false;
 
     public function setForce(bool $force): self
     {
@@ -28,7 +28,8 @@ class SeederExecutorService
     {
         return $this->force;
     }
-    public function getPendingSeeders()
+
+    public function getPendingSeeders(): array
     {
         $allSeeders = $this->getAllSeederClasses();
 
@@ -40,49 +41,43 @@ class SeederExecutorService
             ->all()
             ->pluck('seeder')
             ->toArray();
-        
+
         return array_diff($allSeeders, $tracked);
     }
 
-    public function getAllSeederClasses()
+    public function getAllSeederClasses(): array
     {
         $seedersPath = database_path('seeders');
-        $files = File::glob("{$seedersPath}/*.php");
+        $files = File::glob("$seedersPath/*.php");
 
-        return collect($files)->map(function ($file) {
-            $className = str_replace(
-                ['/', '.php'],
-                ['\\', ''],
-                'Database\\Seeders\\' . basename($file)
-            );
+        return collect($files)->map(
+            function ($file) {
+                $className = str_replace(
+                    ['/', '.php'],
+                    ['\\', ''],
+                    'Database\\Seeders\\' . basename($file)
+                );
 
-            return class_exists($className) ? $className : null;
-        })->filter()->toArray();
+                return class_exists($className) ? $className : null;
+            }
+        )->filter()->toArray();
     }
 
+    /**
+     * @throws Throwable
+     */
     public function runSeeders(array $seeders): void
     {
-        $batch = $this->getNextBatch();
-
         foreach ($seeders as $seeder) {
             try {
                 $instance = app($seeder);
                 $instance->run();
             } catch (Throwable $e) {
                 // Rollback executed seeders in this batch on failure
-                $this->rollbackBatch($batch);
+                $this->rollbackBatch([$seeder]);
                 throw $e;
             }
         }
-    }
-
-    protected function getNextBatch(): ?int
-    {
-        if (is_null(self::$currentBatch)) {
-            self::$currentBatch = $this->seederExecutionService->getNextBatch();
-        }
-
-        return self::$currentBatch;
     }
 
     public function rollbackBatch(array $seeders): void
@@ -95,7 +90,7 @@ class SeederExecutorService
                     $appInConsole &&
                     $this->seederExecutionService->seederDoesntExists($seeder)
                 ) {
-                    (new ConsoleOutput())->writeln('<info>Skipped:</info> ' . str($seeder)->afterLast('\\'));
+                    (new ConsoleOutput())->writeln('<error>Seeder not found:</error> ' . str($seeder)->afterLast('\\'));
                     continue;
                 }
 
@@ -127,6 +122,15 @@ class SeederExecutorService
     }
 
     public function currentBatch(): int
+    {
+        if (is_null(self::$currentBatch)) {
+            self::$currentBatch = $this->seederExecutionService->getNextBatch();
+        }
+
+        return self::$currentBatch;
+    }
+
+    protected function getNextBatch(): ?int
     {
         if (is_null(self::$currentBatch)) {
             self::$currentBatch = $this->seederExecutionService->getNextBatch();
