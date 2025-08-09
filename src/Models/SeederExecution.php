@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class SeederExecution extends Model
 {
+    const UPDATED_AT = null;
+    public $timestamps = ['created_at'];
     protected $fillable = [
         'seeder',
         'batch'
