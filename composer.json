@@ -13,7 +13,7 @@
         "laravel package",
         "database seeding",
         "migration-like seeders",
-        "seed management"
+        "seed management",
         "seeder rollback"
     ],
     "authors": [
