@@ -3,15 +3,12 @@
 namespace Riftweb\SuperSeeder\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Riftweb\SuperSeeder\Console\Commands\MakeSuperSeederCommand;
+use Riftweb\SuperSeeder\Console\Commands\DatabaseSeedCommand;
+use Riftweb\SuperSeeder\Console\Commands\TrackableSeederMakeCommand;
 use Riftweb\SuperSeeder\Repositories\SeederExecutionRepository;
 use Riftweb\SuperSeeder\Services\SeederExecutionService;
-use Riftweb\SuperSeeder\Console\Commands\SuperSeedClearCommand;
-use Riftweb\SuperSeeder\Console\Commands\SuperSeedFreshCommand;
-use Riftweb\SuperSeeder\Console\Commands\SuperSeedCommand;
-use Riftweb\SuperSeeder\Console\Commands\SuperSeedRollbackCommand;
-use Riftweb\SuperSeeder\Models\SeederExecution;
 use Riftweb\SuperSeeder\Services\SeederExecutorService;
+use Riftweb\SuperSeeder\Services\SeederRollbackService;
 
 class RiftSuperSeederServiceProvider extends ServiceProvider
 {
@@ -24,26 +21,25 @@ class RiftSuperSeederServiceProvider extends ServiceProvider
 
         // Register commands
         $this->commands([
-            SuperSeedCommand::class,
-            SuperSeedRollbackCommand::class,
-            SuperSeedClearCommand::class,
-            SuperSeedFreshCommand::class,
-            MakeSuperSeederCommand::class,
+            DatabaseSeedCommand::class,
+            TrackableSeederMakeCommand::class,
         ]);
 
-        $this->app->singleton('superseeder.service', function ($app) {
-            // You can pass any dependencies to the SeederExecutor constructor if necessary
+        $this->app->singleton(SeederExecutionService::class, function ($app) {
             return new SeederExecutionService(
                 $app->make(SeederExecutionRepository::class)
             );
         });
+        $this->app->alias(SeederExecutionService::class, 'superseeder.service');
 
-        $this->app->singleton('superseeder.executor', function ($app) {
-            // You can pass any dependencies to the SeederExecutor constructor if necessary
+        $this->app->singleton(SeederExecutorService::class, function ($app) {
             return new SeederExecutorService(
-                $app->make('superseeder.service')
+                $app->make(SeederExecutionService::class)
             );
         });
+        $this->app->alias(SeederExecutorService::class, 'superseeder.executor');
+
+        $this->app->singleton(SeederRollbackService::class);
     }
 
     public function boot(): void
@@ -56,9 +52,5 @@ class RiftSuperSeederServiceProvider extends ServiceProvider
             __DIR__.'/../Config/superseeder.php' => config_path('superseeder.php'),
         ], 'superseeder-config');
 
-        // Bind the model (optional, for dependency injection)
-        $this->app->bind('seeder-execution-model', function () {
-            return new SeederExecution();
-        });
     }
 }
