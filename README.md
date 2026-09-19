@@ -2,9 +2,9 @@
 
 [![Latest Version](https://img.shields.io/packagist/v/riftweb/superseeder?style=flat-square)](https://packagist.org/packages/riftweb/superseeder)
 [![Total Downloads](https://img.shields.io/packagist/dt/riftweb/superseeder?style=flat-square)](https://packagist.org/packages/riftweb/superseeder)
-[![Website](https://img.shields.io/badge/Website-RIFT%20%7C%20Web%20Development-black?style=flat-square)](https://riftweb.com)
 [![Tests](https://img.shields.io/github/actions/workflow/status/riftwebdev/superseeder/tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/riftwebdev/superseeder/actions/workflows/tests.yml)
 [![License](https://img.shields.io/github/license/riftwebdev/superseeder?style=flat-square)](LICENSE.md)
+[![Website](https://img.shields.io/badge/Website-RIFT%20%7C%20Web%20Development-black?style=flat-square)](https://riftweb.com)
 
 **Seed once. Roll back deliberately.**
 
