@@ -44,6 +44,10 @@ class SeederRollbackService
             }
 
             if (! $dryRun) {
+                if ($dependencies->isNotEmpty()) {
+                    $this->deleteDependencies($dependencies);
+                }
+
                 $instance->down();
 
                 if (! $this->seederExecutionService->deleteBySeeder($seeder)) {
@@ -58,7 +62,7 @@ class SeederRollbackService
     }
 
     /**
-     * @return Collection<int, array{table: string, seeded_table: string, ids: list<int|string>, count: int}>
+     * @return Collection<int, array{table: string, column: string, seeded_table: string, ids: list<int|string>, count: int}>
      */
     protected function findDependencies(object $seeder): Collection
     {
@@ -81,6 +85,7 @@ class SeederRollbackService
                             ->map(function (array $foreignKey) use ($table, $seededTable, $ids): array {
                                 return [
                                     'table' => $table['name'],
+                                    'column' => $foreignKey['columns'][0],
                                     'seeded_table' => $seededTable,
                                     'ids' => $ids,
                                     'count' => DB::table($table['name'])->whereIn($foreignKey['columns'][0], $ids)->count(),
@@ -91,5 +96,17 @@ class SeederRollbackService
                 });
             })
             ->values();
+    }
+
+    /**
+     * @param  Collection<int, array{table: string, column: string, seeded_table: string, ids: list<int|string>, count: int}>  $dependencies
+     */
+    protected function deleteDependencies(Collection $dependencies): void
+    {
+        $dependencies->each(function (array $dependency): void {
+            DB::table($dependency['table'])
+                ->whereIn($dependency['column'], $dependency['ids'])
+                ->delete();
+        });
     }
 }

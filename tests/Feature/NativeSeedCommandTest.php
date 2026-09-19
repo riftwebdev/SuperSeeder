@@ -35,7 +35,10 @@ it('reruns tracked seeders when requested', function (): void {
 it('clears tracking after confirmation', function (): void {
     runTrackableSeeder();
 
-    $this->artisan('db:seed', ['--clear' => true])
+    $this->artisan('db:seed', [
+        '--clear' => true,
+        '--force' => true,
+    ])
         ->expectsConfirmation('This will clear all SuperSeeder tracking records. Continue?', 'yes')
         ->assertExitCode(0);
 
@@ -49,6 +52,7 @@ it('freshly clears tracking and reruns seeders after confirmation', function ():
     $this->artisan('db:seed', [
         '--class' => TrackableTestSeeder::class,
         '--fresh' => true,
+        '--force' => true,
     ])->expectsConfirmation('This will clear all SuperSeeder tracking records and rerun every trackable seeder. Continue?', 'yes')
         ->assertExitCode(0);
 

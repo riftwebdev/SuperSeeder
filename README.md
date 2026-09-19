@@ -125,8 +125,8 @@ public function seededRecords(): array
 ```
 
 If another table references those records, rollback stops with an explanation.
-Use `--cascade` only when the database relationship and your rollback logic
-are designed to remove those dependant records safely:
+Use `--cascade` only when deleting the detected dependant records is safe.
+It deletes those records before calling the seeder's `down()` method:
 
 ```bash
 php artisan db:seed --rollback --dry-run
