@@ -2,9 +2,9 @@
 
 [![Latest Version](https://img.shields.io/packagist/v/riftweb/superseeder?style=flat-square)](https://packagist.org/packages/riftweb/superseeder)
 [![Total Downloads](https://img.shields.io/packagist/dt/riftweb/superseeder?style=flat-square)](https://packagist.org/packages/riftweb/superseeder)
+[![Website](https://img.shields.io/badge/Website-RIFT%20%7C%20Web%20Development-black?style=flat-square)](https://riftweb.com)
 [![Tests](https://img.shields.io/github/actions/workflow/status/riftwebdev/superseeder/tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/riftwebdev/superseeder/actions/workflows/tests.yml)
 [![License](https://img.shields.io/github/license/riftwebdev/superseeder?style=flat-square)](LICENSE.md)
-[![Website](https://img.shields.io/badge/Website-RIFT%20%7C%20Web%20Development-black?style=flat-square)](https://riftweb.com)
 
 **Seed once. Roll back deliberately.**
 
@@ -174,6 +174,21 @@ composer test
 
 The GitHub Actions workflow tests Laravel 12 and 13 compatibility and checks
 code formatting on every push and pull request.
+
+## Laravel Boost
+
+SuperSeeder includes AI guidelines and a seeder-development skill for Laravel
+Boost. After installing the package, import them with:
+
+```bash
+php artisan boost:install
+```
+
+To discover package resources after Boost has already been installed, run:
+
+```bash
+php artisan boost:update --discover
+```
 
 ## License
 SuperSeeder is open-sourced software licensed under the [MIT license](LICENSE.md).
