@@ -1,6 +1,6 @@
 {
     "name": "riftweb/superseeder",
-    "description": "Supercharge your Laravel database seeding with execution tracking and rollbacks! This package adds migration-like behavior to seeders, preventing duplicate runs while enabling batch management and safe rollback of seeded data. Perfect for production environments and complex seeding workflows.",
+    "description": "Migration-style execution tracking and safe rollbacks for Laravel seeders.",
     "license": "MIT",
     "keywords": [
         "riftweb",
@@ -13,7 +13,8 @@
         "laravel package",
         "database seeding",
         "migration-like seeders",
-        "seed management"
+        "seed management",
+        "seeder rollback"
     ],
     "authors": [
         {
@@ -30,18 +31,26 @@
         "illuminate/support": "^12.0|^13.0"
     },
     "require-dev": {
-        "orchestra/testbench": "^6.23|^7.0|^8.0|^9.0",
-        "phpunit/phpunit": "^9.4|^10.1|^11.0"
+        "laravel/pint": "^1.0",
+        "orchestra/testbench": "^10.0|^11.0",
+        "pestphp/pest": "^3.8"
     },
-    "minimum-stability": "dev",
     "prefer-stable": true,
     "autoload": {
         "psr-4": {
             "Riftweb\\SuperSeeder\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
     },
     "extra": {
         "laravel": {
@@ -51,8 +60,7 @@
         }
     },
     "scripts": {
-        "test": "phpunit",
-        "format": "php-cs-fixer fix --allow-risky=yes",
-        "analyse": "phpstan analyse"
+        "test": "pest --ci",
+        "format": "pint"
     }
 }

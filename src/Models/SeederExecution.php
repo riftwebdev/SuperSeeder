@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class SeederExecution extends Model
 {
     const UPDATED_AT = null;
-    public $timestamps = ['created_at'];
+
     protected $fillable = [
         'seeder',
-        'batch'
+        'batch',
     ];
 
     public function casts(): array
@@ -23,6 +23,6 @@ class SeederExecution extends Model
 
     public function getTable(): string
     {
-        return config("superseeder.table", parent::getTable());
+        return config('superseeder.table', parent::getTable());
     }
 }

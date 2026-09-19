@@ -5,23 +5,11 @@ namespace Riftweb\SuperSeeder\Services;
 use Illuminate\Support\Collection;
 use Riftweb\SuperSeeder\Models\SeederExecution;
 use Riftweb\SuperSeeder\Repositories\SeederExecutionRepository;
-use Throwable;
 
 class SeederExecutionService
 {
-    public function __construct(protected SeederExecutionRepository $seederExecutionRepository)
-    {
-    }
+    public function __construct(protected SeederExecutionRepository $seederExecutionRepository) {}
 
-    public function getCurrentBatch(): int
-    {
-        return $this->getNextBatch();
-    }
-
-    public function all(): Collection
-    {
-        return $this->seederExecutionRepository->all();
-    }
     public function getNextBatch(): int
     {
         return $this->seederExecutionRepository->getNextBatch();
@@ -53,21 +41,6 @@ class SeederExecutionService
     public function getByBatch(int $batch): Collection
     {
         return $this->seederExecutionRepository->getByBatch($batch);
-    }
-
-    public function mapBatchForConsoleTable(int $batch): array
-    {
-        try {
-            return $this->getByBatch($batch)
-                ->pluck('seeder')
-                ->transform(function (string $seederPath) {
-                    return str($seederPath)->afterLast('\\');
-                })
-                ->toArray();
-        } catch (Throwable $e) {
-            report($e);
-            return [];
-        }
     }
 
     public function deleteBySeeder(string $seeder): bool

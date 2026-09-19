@@ -3,13 +3,13 @@
 namespace DummyNamespace;
 
 use Illuminate\Database\Seeder;
-use Riftweb\SuperSeeder\Traits\TrackableSeeder;
+use Riftweb\SuperSeeder\Traits\Trackable;
 
 class DummySeeder extends Seeder
 {
-    use TrackableSeeder;
+    use Trackable;
 
-    public function up(): void
+    protected function up(): void
     {
         // Your seeding logic here
     }
