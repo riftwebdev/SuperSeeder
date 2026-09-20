@@ -269,7 +269,8 @@ trait Trackable
      */
     protected function hashTrackedRecords(array $trackedRecords): string
     {
-        $rows = collect($trackedRecords)
+        $normalizedRecords = $this->normalizeTrackedRecords($trackedRecords);
+        $rows = collect($normalizedRecords)
             ->mapWithKeys(function (array $columns, string $table): array {
                 $serializedColumns = collect($columns)->map(function (array $ids, string $column) use ($table): array {
                     if ($ids === []) {
@@ -291,6 +292,28 @@ trait Trackable
             ->all();
 
         return hash('sha256', json_encode($rows, JSON_THROW_ON_ERROR));
+    }
+
+    /**
+     * @param  array<string, array<string, list<int|string>>>  $trackedRecords
+     * @return array<string, array<string, list<int|string>>>
+     */
+    protected function normalizeTrackedRecords(array $trackedRecords): array
+    {
+        ksort($trackedRecords);
+
+        foreach ($trackedRecords as $table => $columns) {
+            ksort($columns);
+
+            foreach ($columns as $column => $ids) {
+                sort($ids);
+                $columns[$column] = array_values(array_unique($ids, SORT_REGULAR));
+            }
+
+            $trackedRecords[$table] = $columns;
+        }
+
+        return $trackedRecords;
     }
 
     protected function hashSeederClass(): ?string

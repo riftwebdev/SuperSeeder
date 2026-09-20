@@ -137,7 +137,7 @@ class DatabaseSeedCommand extends SeedCommand
     {
         $class = $this->argument('class');
 
-        if (! $class && $this->option('class') !== 'Database\\Seeders\\DatabaseSeeder') {
+        if (! $class && $this->input->hasParameterOption('--class')) {
             $class = $this->option('class');
         }
 
