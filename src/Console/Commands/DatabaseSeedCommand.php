@@ -95,6 +95,7 @@ class DatabaseSeedCommand extends SeedCommand
 
         $seeders = $this->seederExecutionService->getByBatch($batch)
             ->filter(fn ($execution): bool => $this->matchesRequestedTags($execution))
+            ->sortByDesc('id')
             ->values();
 
         if ($seeders->isEmpty()) {

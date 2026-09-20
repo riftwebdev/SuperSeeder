@@ -14,7 +14,7 @@ class SeederDiscoveryService
     public function discover(?string $class = null): array
     {
         if ($class) {
-            return [$class];
+            return class_exists($class) && $this->usesTrackable($class) ? [$class] : [];
         }
 
         $seeders = [];
