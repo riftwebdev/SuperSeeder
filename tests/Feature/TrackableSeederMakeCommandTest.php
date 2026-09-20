@@ -5,9 +5,11 @@ use Illuminate\Support\Facades\File;
 
 function seederDirectory(): string
 {
-    return is_dir(test()->app->databasePath('seeds'))
-        ? test()->app->databasePath('seeds')
-        : test()->app->databasePath('seeders');
+    $app = app();
+
+    return is_dir($app->databasePath('seeds'))
+        ? $app->databasePath('seeds')
+        : $app->databasePath('seeders');
 }
 
 afterEach(function (): void {
