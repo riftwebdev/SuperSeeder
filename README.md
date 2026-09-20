@@ -43,6 +43,10 @@ Generate a trackable seeder:
 php artisan make:seeder PaymentMethodSeeder --trackable
 ```
 
+By default, SuperSeeder prefixes the generated file name with a timestamp, for
+example `database/seeders/20260901144500PaymentMethodSeeder.php`. The seeder
+class name stays `PaymentMethodSeeder`.
+
 Add its normal seed and rollback behavior:
 
 ```php
@@ -157,6 +161,7 @@ php artisan vendor:publish --tag=superseeder-config
 return [
     'bypass' => false,
     'table' => 'seeder_executions',
+    'use_timestamped_seeders' => true,
     'rollback' => [
         'production_enabled' => false,
     ],
@@ -165,6 +170,9 @@ return [
 
 Set `SUPERSEEDER_BYPASS=true` only for an intentional emergency rerun. Prefer
 the one-off `--rerun` option for routine use.
+
+Set `SUPERSEEDER_USE_TIMESTAMPED_SEEDERS=false` if you prefer generated
+trackable seeders without the timestamp prefix.
 
 ## Testing
 
