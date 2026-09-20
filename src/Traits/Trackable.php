@@ -76,15 +76,18 @@ trait Trackable
         $service = app('superseeder.service');
         $executor = app('superseeder.executor');
         $trackedRecords = $this->resolveTrackedRecords();
+        $recordHashRequiresUniqueColumns = $this->trackedRecordsRequireUniqueColumns || $this->hasLegacySeededRecordsOverride();
         $recordHash = $trackedRecords === []
             ? null
-            : app(TrackedRecordHashService::class)->hash($trackedRecords, $this->trackedRecordsRequireUniqueColumns || $this->hasLegacySeededRecordsOverride());
+            : app(TrackedRecordHashService::class)->hash($trackedRecords, $recordHashRequiresUniqueColumns);
 
         if (! $service->store(static::class, $executor->currentBatch(), [
             'status' => 'ran',
             'execution_time_ms' => $executionTimeMs,
             'tracked_records' => $trackedRecords === [] ? null : $trackedRecords,
+            'tags' => $this->seederTags() === [] ? null : $this->seederTags(),
             'record_hash' => $recordHash,
+            'record_hash_requires_unique_columns' => $recordHash === null ? null : $recordHashRequiresUniqueColumns,
             'seeder_hash' => $this->hashSeederClass(),
         ])) {
             throw new RuntimeException(sprintf('Unable to record execution for %s.', static::class));

@@ -14,7 +14,9 @@ class SeederExecution extends Model
         'status',
         'execution_time_ms',
         'tracked_records',
+        'tags',
         'record_hash',
+        'record_hash_requires_unique_columns',
         'seeder_hash',
     ];
 
@@ -24,6 +26,8 @@ class SeederExecution extends Model
             'batch' => 'int',
             'execution_time_ms' => 'int',
             'tracked_records' => 'array',
+            'tags' => 'array',
+            'record_hash_requires_unique_columns' => 'bool',
             'created_at' => 'datetime',
         ];
     }

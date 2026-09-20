@@ -15,7 +15,9 @@ return new class extends Migration
             $table->string('status')->default('ran');
             $table->unsignedBigInteger('execution_time_ms')->nullable();
             $table->json('tracked_records')->nullable();
+            $table->json('tags')->nullable();
             $table->string('record_hash')->nullable();
+            $table->boolean('record_hash_requires_unique_columns')->nullable();
             $table->string('seeder_hash')->nullable();
             $table->timestamp('created_at')->useCurrent();
         });

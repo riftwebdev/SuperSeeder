@@ -14,7 +14,9 @@ class SeederExecutionRepository
      *     status?: string,
      *     execution_time_ms?: int|null,
      *     tracked_records?: array<string, array<string, list<int|string>>>|null,
+     *     tags?: list<string>|null,
      *     record_hash?: string|null,
+     *     record_hash_requires_unique_columns?: bool|null,
      *     seeder_hash?: string|null
      * }  $data
      */

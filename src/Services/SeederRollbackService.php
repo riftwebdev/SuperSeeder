@@ -158,7 +158,12 @@ class SeederRollbackService
             }
         }
 
-        $recordHash = $trackedRecords === [] ? null : $this->trackedRecordHashService->hash($trackedRecords);
+        $recordHash = $trackedRecords === []
+            ? null
+            : $this->trackedRecordHashService->hash(
+                $trackedRecords,
+                $execution->record_hash_requires_unique_columns ?? true,
+            );
 
         if ($execution->record_hash && $recordHash && $execution->record_hash !== $recordHash) {
             $warnings[] = sprintf(

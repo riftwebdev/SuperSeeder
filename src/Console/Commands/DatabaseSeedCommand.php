@@ -94,7 +94,7 @@ class DatabaseSeedCommand extends SeedCommand
         }
 
         $seeders = $this->seederExecutionService->getByBatch($batch)
-            ->filter(fn ($execution): bool => $this->matchesRequestedTags($execution->seeder))
+            ->filter(fn ($execution): bool => $this->matchesRequestedTags($execution))
             ->values();
 
         if ($seeders->isEmpty()) {
@@ -204,7 +204,7 @@ class DatabaseSeedCommand extends SeedCommand
         return array_values(array_filter((array) $this->option('tag'), fn (?string $tag): bool => filled($tag)));
     }
 
-    protected function matchesRequestedTags(string $seeder): bool
+    protected function matchesRequestedTags(object $execution): bool
     {
         $tags = $this->tags();
 
@@ -212,6 +212,11 @@ class DatabaseSeedCommand extends SeedCommand
             return true;
         }
 
+        if (is_array($execution->tags) && $execution->tags !== []) {
+            return array_intersect($tags, $execution->tags) !== [];
+        }
+
+        $seeder = $execution->seeder;
         $seederTags = [];
 
         if (class_exists($seeder)) {
