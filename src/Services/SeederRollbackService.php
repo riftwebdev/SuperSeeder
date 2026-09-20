@@ -4,7 +4,6 @@ namespace Riftweb\SuperSeeder\Services;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use ReflectionClass;
 use Riftweb\SuperSeeder\Exceptions\RollbackBlockedException;
 use Riftweb\SuperSeeder\Models\SeederExecution;
@@ -14,6 +13,7 @@ class SeederRollbackService
 {
     public function __construct(
         protected SeederExecutionService $seederExecutionService,
+        protected TrackedRecordHashService $trackedRecordHashService,
     ) {}
 
     /**
@@ -52,22 +52,18 @@ class SeederRollbackService
 
             if (! $dryRun) {
                 $callback = function () use ($dependencies, $instance, $execution, $seeder): void {
+                    if (! $this->seederExecutionService->deleteExecution($execution->id)) {
+                        throw new RuntimeException(sprintf('Unable to remove the tracking record for %s.', $seeder));
+                    }
+
                     if ($dependencies->isNotEmpty()) {
                         $this->deleteDependencies($dependencies);
                     }
 
                     $instance->down();
-
-                    if (! $this->seederExecutionService->deleteExecution($execution->id)) {
-                        throw new RuntimeException(sprintf('Unable to remove the tracking record for %s.', $seeder));
-                    }
                 };
 
-                if (! method_exists($instance, 'runsWithinTransaction') || $instance->runsWithinTransaction()) {
-                    DB::transaction($callback);
-                } else {
-                    $callback();
-                }
+                DB::transaction($callback);
             }
 
             $rolledBackSeeders[] = $seeder;
@@ -130,15 +126,7 @@ class SeederRollbackService
      */
     protected function resolveTrackedRecords(object $seeder, SeederExecution $execution): array
     {
-        if (is_array($execution->tracked_records) && $execution->tracked_records !== []) {
-            return $execution->tracked_records;
-        }
-
-        if (! method_exists($seeder, 'seededRecords')) {
-            return [];
-        }
-
-        return $seeder->seededRecords();
+        return is_array($execution->tracked_records) ? $execution->tracked_records : [];
     }
 
     /**
@@ -149,7 +137,7 @@ class SeederRollbackService
     {
         $warnings = [];
         $currentSeederHash = $this->hashSeeder($seeder);
-        $missingTrackedRows = $this->findMissingTrackedRows($trackedRecords);
+        $missingTrackedRows = $this->trackedRecordHashService->missingRows($trackedRecords);
 
         if ($execution->seeder_hash && $currentSeederHash && $execution->seeder_hash !== $currentSeederHash) {
             $warnings[] = sprintf(
@@ -170,7 +158,7 @@ class SeederRollbackService
             }
         }
 
-        $recordHash = $trackedRecords === [] ? null : $this->hashTrackedRecords($trackedRecords);
+        $recordHash = $trackedRecords === [] ? null : $this->trackedRecordHashService->hash($trackedRecords);
 
         if ($execution->record_hash && $recordHash && $execution->record_hash !== $recordHash) {
             $warnings[] = sprintf(
@@ -182,113 +170,10 @@ class SeederRollbackService
         return $warnings;
     }
 
-    /**
-     * @param  array<string, array<string, list<int|string>>>  $trackedRecords
-     * @return array<string, array<string, list<int|string>>>
-     */
-    protected function findMissingTrackedRows(array $trackedRecords): array
-    {
-        $missingRows = [];
-
-        foreach ($this->normalizeTrackedRecords($trackedRecords) as $table => $columns) {
-            foreach ($columns as $column => $ids) {
-                if ($ids === []) {
-                    continue;
-                }
-
-                $existingIds = DB::table($table)
-                    ->whereIn($column, $ids)
-                    ->pluck($column)
-                    ->map(fn (mixed $id): string => (string) $id)
-                    ->all();
-
-                $missingIds = collect($ids)
-                    ->mapWithKeys(fn (string|int $id): array => [(string) $id => $id])
-                    ->except($existingIds)
-                    ->values()
-                    ->all();
-
-                if ($missingIds !== []) {
-                    $missingRows[$table][$column] = $missingIds;
-                }
-            }
-        }
-
-        return $missingRows;
-    }
-
     protected function hashSeeder(object $seeder): ?string
     {
         $fileName = (new ReflectionClass($seeder))->getFileName();
 
         return $fileName ? hash_file('sha256', $fileName) ?: null : null;
-    }
-
-    /**
-     * @param  array<string, array<string, list<int|string>>>  $trackedRecords
-     */
-    protected function hashTrackedRecords(array $trackedRecords): ?string
-    {
-        $normalizedRecords = $this->normalizeTrackedRecords($trackedRecords);
-
-        foreach ($normalizedRecords as $table => $columns) {
-            foreach (array_keys($columns) as $column) {
-                if (! $this->supportsRowHashing($table, $column)) {
-                    return null;
-                }
-            }
-        }
-
-        $rows = collect($normalizedRecords)
-            ->mapWithKeys(function (array $columns, string $table): array {
-                $serializedColumns = collect($columns)->map(function (array $ids, string $column) use ($table): array {
-                    if ($ids === []) {
-                        return [$column => []];
-                    }
-
-                    return [
-                        $column => DB::table($table)
-                            ->whereIn($column, $ids)
-                            ->orderBy($column)
-                            ->get()
-                            ->map(fn (object $row): array => (array) $row)
-                            ->all(),
-                    ];
-                })->all();
-
-                return [$table => $serializedColumns];
-            })
-            ->all();
-
-        return hash('sha256', json_encode($rows, JSON_THROW_ON_ERROR));
-    }
-
-    protected function supportsRowHashing(string $table, string $column): bool
-    {
-        return collect(Schema::getIndexes($table))
-            ->contains(fn (array $index): bool => (($index['primary'] ?? false) || ($index['unique'] ?? false))
-                && ($index['columns'] ?? []) === [$column]);
-    }
-
-    /**
-     * @param  array<string, array<string, list<int|string>>>  $trackedRecords
-     * @return array<string, array<string, list<int|string>>>
-     */
-    protected function normalizeTrackedRecords(array $trackedRecords): array
-    {
-        ksort($trackedRecords);
-
-        foreach ($trackedRecords as $table => $columns) {
-            ksort($columns);
-
-            foreach ($columns as $column => $ids) {
-                sort($ids);
-                $columns[$column] = array_values(array_unique($ids, SORT_REGULAR));
-            }
-
-            $trackedRecords[$table] = $columns;
-        }
-
-        return $trackedRecords;
     }
 }

@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use ReflectionClass;
+use Riftweb\SuperSeeder\Services\TrackedRecordHashService;
 use RuntimeException;
 use Throwable;
 
@@ -19,6 +19,8 @@ trait Trackable
      * @var array<string, array<string, list<int|string>>>
      */
     protected array $tracked = [];
+
+    protected bool $trackedRecordsRequireUniqueColumns = false;
 
     public function run(): void
     {
@@ -70,7 +72,9 @@ trait Trackable
         $service = app('superseeder.service');
         $executor = app('superseeder.executor');
         $trackedRecords = $this->resolveTrackedRecords();
-        $recordHash = $trackedRecords === [] ? null : $this->hashTrackedRecords($trackedRecords);
+        $recordHash = $trackedRecords === []
+            ? null
+            : app(TrackedRecordHashService::class)->hash($trackedRecords, $this->trackedRecordsRequireUniqueColumns || $this->hasLegacySeededRecordsOverride());
 
         if (! $service->store(static::class, $executor->currentBatch(), [
             'status' => 'ran',
@@ -214,6 +218,7 @@ trait Trackable
         }
 
         if (is_array($value) && $this->looksLikeTrackedRecordMap($value)) {
+            $this->trackedRecordsRequireUniqueColumns = true;
             $this->tracked = $this->mergeTrackedRecords($this->tracked, $value);
         }
     }
@@ -266,72 +271,9 @@ trait Trackable
         return $merged;
     }
 
-    /**
-     * @param  array<string, array<string, list<int|string>>>  $trackedRecords
-     */
-    protected function hashTrackedRecords(array $trackedRecords): ?string
+    protected function hasLegacySeededRecordsOverride(): bool
     {
-        $normalizedRecords = $this->normalizeTrackedRecords($trackedRecords);
-
-        foreach ($normalizedRecords as $table => $columns) {
-            foreach (array_keys($columns) as $column) {
-                if (! $this->supportsRowHashing($table, $column)) {
-                    return null;
-                }
-            }
-        }
-
-        $rows = collect($normalizedRecords)
-            ->mapWithKeys(function (array $columns, string $table): array {
-                $serializedColumns = collect($columns)->map(function (array $ids, string $column) use ($table): array {
-                    if ($ids === []) {
-                        return [$column => []];
-                    }
-
-                    return [
-                        $column => DB::table($table)
-                            ->whereIn($column, $ids)
-                            ->orderBy($column)
-                            ->get()
-                            ->map(fn (object $row): array => (array) $row)
-                            ->all(),
-                    ];
-                })->all();
-
-                return [$table => $serializedColumns];
-            })
-            ->all();
-
-        return hash('sha256', json_encode($rows, JSON_THROW_ON_ERROR));
-    }
-
-    protected function supportsRowHashing(string $table, string $column): bool
-    {
-        return collect(Schema::getIndexes($table))
-            ->contains(fn (array $index): bool => (($index['primary'] ?? false) || ($index['unique'] ?? false))
-                && ($index['columns'] ?? []) === [$column]);
-    }
-
-    /**
-     * @param  array<string, array<string, list<int|string>>>  $trackedRecords
-     * @return array<string, array<string, list<int|string>>>
-     */
-    protected function normalizeTrackedRecords(array $trackedRecords): array
-    {
-        ksort($trackedRecords);
-
-        foreach ($trackedRecords as $table => $columns) {
-            ksort($columns);
-
-            foreach ($columns as $column => $ids) {
-                sort($ids);
-                $columns[$column] = array_values(array_unique($ids, SORT_REGULAR));
-            }
-
-            $trackedRecords[$table] = $columns;
-        }
-
-        return $trackedRecords;
+        return (new ReflectionClass($this))->getMethod('seededRecords')->getFileName() !== __FILE__;
     }
 
     protected function hashSeederClass(): ?string
