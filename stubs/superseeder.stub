@@ -5,7 +5,7 @@ namespace DummyNamespace;
 use Illuminate\Database\Seeder;
 use Riftweb\SuperSeeder\Traits\Trackable;
 
-class DummySeeder extends Seeder
+class DummyClass extends Seeder
 {
     use Trackable;
 

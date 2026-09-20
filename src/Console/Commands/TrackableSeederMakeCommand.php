@@ -18,4 +18,38 @@ class TrackableSeederMakeCommand extends SeederMakeCommand
 
         return parent::getStub();
     }
+
+    protected function getPath($name): string
+    {
+        $path = parent::getPath($name);
+
+        if (! $this->shouldUseTimestampedSeederPaths()) {
+            return $path;
+        }
+
+        return dirname($path).'/'.$this->getSeederTimestampPrefix().basename($path);
+    }
+
+    protected function alreadyExists($rawName): bool
+    {
+        if (! $this->shouldUseTimestampedSeederPaths()) {
+            return parent::alreadyExists($rawName);
+        }
+
+        $path = parent::getPath($this->qualifyClass($rawName));
+
+        return $this->files->exists($path)
+            || $this->files->glob(dirname($path).'/*'.basename($path)) !== [];
+    }
+
+    protected function shouldUseTimestampedSeederPaths(): bool
+    {
+        return $this->option('trackable')
+            && (bool) config('superseeder.use_timestamped_seeders', true);
+    }
+
+    protected function getSeederTimestampPrefix(): string
+    {
+        return now()->format('YmdHis');
+    }
 }
