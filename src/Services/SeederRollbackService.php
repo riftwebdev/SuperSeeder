@@ -197,10 +197,14 @@ class SeederRollbackService
                 $existingIds = DB::table($table)
                     ->whereIn($column, $ids)
                     ->pluck($column)
-                    ->map(fn (mixed $id): string|int => $id)
+                    ->map(fn (mixed $id): string => (string) $id)
                     ->all();
 
-                $missingIds = array_values(array_diff($ids, $existingIds));
+                $missingIds = collect($ids)
+                    ->mapWithKeys(fn (string|int $id): array => [(string) $id => $id])
+                    ->except($existingIds)
+                    ->values()
+                    ->all();
 
                 if ($missingIds !== []) {
                     $missingRows[$table][$column] = $missingIds;

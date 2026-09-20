@@ -34,10 +34,6 @@ class SeederDiscoveryService
                     continue;
                 }
 
-                if (! class_exists($seederClass, false)) {
-                    require_once $file->getPathname();
-                }
-
                 if (class_exists($seederClass) && $this->usesTrackable($seederClass)) {
                     $seeders[] = $seederClass;
                 }
