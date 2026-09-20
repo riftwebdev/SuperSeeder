@@ -66,8 +66,9 @@ class TrackedRecordHashService
             ksort($columns);
 
             foreach ($columns as $column => $ids) {
-                sort($ids);
-                $columns[$column] = array_values(array_unique($ids, SORT_REGULAR));
+                $normalizedIds = array_map(static fn (string|int $id): string => (string) $id, $ids);
+                sort($normalizedIds);
+                $columns[$column] = array_values(array_unique($normalizedIds, SORT_REGULAR));
             }
 
             $trackedRecords[$table] = $columns;

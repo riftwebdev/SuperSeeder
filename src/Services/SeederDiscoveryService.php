@@ -2,6 +2,7 @@
 
 namespace Riftweb\SuperSeeder\Services;
 
+use FilesystemIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Riftweb\SuperSeeder\Traits\Trackable;
@@ -24,7 +25,7 @@ class SeederDiscoveryService
                 continue;
             }
 
-            $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($source['path']));
+            $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($source['path'], FilesystemIterator::SKIP_DOTS));
 
             foreach ($iterator as $file) {
                 if (! $file->isFile() || $file->getExtension() !== 'php') {
