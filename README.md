@@ -123,10 +123,11 @@ they also require `--force`.
 ## Safe rollbacks
 
 A rollback calls each seeder's `down()` method and deletes its tracking record.
-By default, SuperSeeder wraps `up()` and `down()` in a transaction; set
-`public bool $withinTransaction = false;` on the seeder to opt out. Write
-`down()` defensively: target only records the seeder owns, never broad tables or
-shared data.
+By default, the `Trackable` trait wraps `up()` in a transaction, and the
+rollback service wraps rollback execution in a transaction as well; set
+`public bool $withinTransaction = false;` on the seeder to opt out of tracked
+seed execution transactions. Write `down()` defensively: target only records
+the seeder owns, never broad tables or shared data.
 
 SuperSeeder can identify foreign-key dependants before calling `down()`. The
 easiest option is to capture created models as they are seeded:

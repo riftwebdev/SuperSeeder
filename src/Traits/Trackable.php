@@ -33,8 +33,10 @@ trait Trackable
         }
 
         $startedAt = microtime(true);
-        $callback = function () use ($startedAt): void {
+        $upCompleted = false;
+        $callback = function () use ($startedAt, &$upCompleted): void {
             $this->up();
+            $upCompleted = true;
             $this->markAsRun((int) round((microtime(true) - $startedAt) * 1000));
         };
 
@@ -47,7 +49,7 @@ trait Trackable
         try {
             $callback();
         } catch (Throwable $exception) {
-            if (! $this->wasRecentlyCreatedTrackingFailure($exception)) {
+            if (! $upCompleted || ! $this->wasRecentlyCreatedTrackingFailure($exception)) {
                 throw $exception;
             }
 

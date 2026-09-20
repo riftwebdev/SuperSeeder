@@ -18,17 +18,20 @@ class SeederDiscoveryService
         }
 
         $seeders = [];
-        $seedersPath = $this->seedersPath();
 
-        if ($seedersPath && is_dir($seedersPath)) {
-            $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($seedersPath));
+        foreach ($this->sources() as $source) {
+            if (! is_dir($source['path'])) {
+                continue;
+            }
+
+            $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($source['path']));
 
             foreach ($iterator as $file) {
                 if (! $file->isFile() || $file->getExtension() !== 'php') {
                     continue;
                 }
 
-                $seederClass = $this->classFromPath($file->getPathname(), $seedersPath);
+                $seederClass = $this->classFromPath($file->getPathname(), $source['path'], $source['namespace']);
 
                 if (! $seederClass) {
                     continue;
@@ -43,16 +46,31 @@ class SeederDiscoveryService
         return array_values(array_unique($seeders));
     }
 
-    protected function seedersPath(): ?string
+    /**
+     * @return list<array{path: string, namespace: string}>
+     */
+    protected function sources(): array
     {
-        if (function_exists('database_path')) {
-            return database_path('seeders');
+        $configuredSources = config('superseeder.seeder_sources');
+
+        if (is_array($configuredSources) && $configuredSources !== []) {
+            return array_values(array_filter($configuredSources, function (mixed $source): bool {
+                return is_array($source)
+                    && is_string($source['path'] ?? null)
+                    && is_string($source['namespace'] ?? null);
+            }));
         }
 
-        return app()->basePath('database/seeders');
+        return [[
+            'path' => function_exists('database_path')
+                ? database_path('seeders')
+                : app()->basePath('database/seeders'),
+            'namespace' => config('superseeder.seeders_namespace')
+                ?: app()->getNamespace().'Database\\Seeders\\',
+        ]];
     }
 
-    protected function classFromPath(string $path, string $seedersPath): ?string
+    protected function classFromPath(string $path, string $seedersPath, string $namespace): ?string
     {
         $relativePath = ltrim(str_replace($seedersPath, '', $path), DIRECTORY_SEPARATOR);
         $classSuffix = str_replace(
@@ -60,9 +78,6 @@ class SeederDiscoveryService
             ['\\', ''],
             $relativePath,
         );
-
-        $namespace = config('superseeder.seeders_namespace')
-            ?: app()->getNamespace().'Database\\Seeders\\';
 
         return $classSuffix === '' ? null : $namespace.$classSuffix;
     }

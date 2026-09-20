@@ -94,22 +94,22 @@ class DatabaseSeedCommand extends SeedCommand
             return self::SUCCESS;
         }
 
-        $seeders = $this->seederExecutionService->getByBatch($batch)
+        $executions = $this->seederExecutionService->getByBatch($batch)
             ->filter(fn ($execution): bool => $this->matchesRequestedTags($execution))
             ->sortByDesc('id')
             ->values();
 
-        if ($seeders->isEmpty()) {
+        if ($executions->isEmpty()) {
             $this->info('No seeders matched the requested rollback scope.');
 
             return self::SUCCESS;
         }
 
-        $this->info(sprintf('Rolling back batch #%d (%d seeder(s))', $batch, $seeders->count()));
+        $this->info(sprintf('Rolling back batch #%d (%d seeder(s))', $batch, $executions->count()));
 
         try {
             $rollbackResult = $this->seederRollbackService->rollbackBatch(
-                $seeders,
+                $executions,
                 $this->option('dry-run'),
                 $this->option('cascade'),
             );
