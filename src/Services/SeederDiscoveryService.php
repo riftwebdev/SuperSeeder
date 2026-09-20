@@ -72,7 +72,10 @@ class SeederDiscoveryService
 
     protected function classFromPath(string $path, string $seedersPath, string $namespace): ?string
     {
-        $relativePath = ltrim(str_replace($seedersPath, '', $path), DIRECTORY_SEPARATOR);
+        $seedersPath = rtrim($seedersPath, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
+        $relativePath = str_starts_with($path, $seedersPath)
+            ? substr($path, strlen($seedersPath))
+            : $path;
         $classSuffix = str_replace(
             [DIRECTORY_SEPARATOR, '.php'],
             ['\\', ''],

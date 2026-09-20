@@ -94,10 +94,18 @@ class DatabaseSeedCommand extends SeedCommand
             return self::SUCCESS;
         }
 
-        $executions = $this->seederExecutionService->getByBatch($batch)
-            ->filter(fn ($execution): bool => $this->matchesRequestedTags($execution))
-            ->sortByDesc('id')
-            ->values();
+        $executions = collect();
+
+        while ($batch > 0 && $executions->isEmpty()) {
+            $executions = $this->seederExecutionService->getByBatch($batch)
+                ->filter(fn ($execution): bool => $this->matchesRequestedTags($execution))
+                ->sortByDesc('id')
+                ->values();
+
+            if ($executions->isEmpty()) {
+                $batch--;
+            }
+        }
 
         if ($executions->isEmpty()) {
             $this->info('No seeders matched the requested rollback scope.');

@@ -40,7 +40,7 @@ trait Trackable
             $this->markAsRun((int) round((microtime(true) - $startedAt) * 1000));
         };
 
-        if ($this->withinTransaction()) {
+        if ($this->shouldUseTransaction()) {
             DB::transaction($callback);
 
             return;
@@ -157,10 +157,10 @@ trait Trackable
 
     public function runsWithinTransaction(): bool
     {
-        return $this->withinTransaction();
+        return $this->shouldUseTransaction();
     }
 
-    protected function withinTransaction(): bool
+    protected function shouldUseTransaction(): bool
     {
         return ! property_exists($this, 'withinTransaction') || (bool) $this->withinTransaction;
     }
