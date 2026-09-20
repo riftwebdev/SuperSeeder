@@ -33,7 +33,7 @@ class SeederRollbackService
             }
 
             $instance = app($seeder);
-            $trackedRecords = $this->resolveTrackedRecords($instance, $execution);
+            $trackedRecords = $this->resolveTrackedRecords($execution);
             $dependencies = $this->findDependencies($trackedRecords);
             $warnings = [...$warnings, ...$this->driftWarnings($instance, $execution, $trackedRecords)];
 
@@ -124,7 +124,7 @@ class SeederRollbackService
     /**
      * @return array<string, array<string, list<int|string>>>
      */
-    protected function resolveTrackedRecords(object $seeder, SeederExecution $execution): array
+    protected function resolveTrackedRecords(SeederExecution $execution): array
     {
         return is_array($execution->tracked_records) ? $execution->tracked_records : [];
     }

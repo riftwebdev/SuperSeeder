@@ -215,17 +215,21 @@ class DatabaseSeedCommand extends SeedCommand
         $seederTags = [];
 
         if (class_exists($seeder)) {
-            $reflection = new ReflectionClass($seeder);
+            try {
+                $reflection = new ReflectionClass($seeder);
 
-            do {
-                $defaultProperties = $reflection->getDefaultProperties();
+                do {
+                    $defaultProperties = $reflection->getDefaultProperties();
 
-                if (array_key_exists('tags', $defaultProperties)) {
-                    $seederTags = array_values((array) $defaultProperties['tags']);
+                    if (array_key_exists('tags', $defaultProperties)) {
+                        $seederTags = array_values((array) $defaultProperties['tags']);
 
-                    break;
-                }
-            } while ($reflection = $reflection->getParentClass());
+                        break;
+                    }
+                } while ($reflection = $reflection->getParentClass());
+            } catch (\ReflectionException) {
+                return false;
+            }
         }
 
         return array_intersect($tags, $seederTags) !== [];
