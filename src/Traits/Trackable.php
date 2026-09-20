@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use ReflectionClass;
 use RuntimeException;
 use Throwable;
@@ -69,12 +70,13 @@ trait Trackable
         $service = app('superseeder.service');
         $executor = app('superseeder.executor');
         $trackedRecords = $this->resolveTrackedRecords();
+        $recordHash = $trackedRecords === [] ? null : $this->hashTrackedRecords($trackedRecords);
 
         if (! $service->store(static::class, $executor->currentBatch(), [
             'status' => 'ran',
             'execution_time_ms' => $executionTimeMs,
             'tracked_records' => $trackedRecords === [] ? null : $trackedRecords,
-            'record_hash' => $trackedRecords === [] ? null : $this->hashTrackedRecords($trackedRecords),
+            'record_hash' => $recordHash,
             'seeder_hash' => $this->hashSeederClass(),
         ])) {
             throw new RuntimeException(sprintf('Unable to record execution for %s.', static::class));
@@ -267,9 +269,18 @@ trait Trackable
     /**
      * @param  array<string, array<string, list<int|string>>>  $trackedRecords
      */
-    protected function hashTrackedRecords(array $trackedRecords): string
+    protected function hashTrackedRecords(array $trackedRecords): ?string
     {
         $normalizedRecords = $this->normalizeTrackedRecords($trackedRecords);
+
+        foreach ($normalizedRecords as $table => $columns) {
+            foreach (array_keys($columns) as $column) {
+                if (! $this->supportsRowHashing($table, $column)) {
+                    return null;
+                }
+            }
+        }
+
         $rows = collect($normalizedRecords)
             ->mapWithKeys(function (array $columns, string $table): array {
                 $serializedColumns = collect($columns)->map(function (array $ids, string $column) use ($table): array {
@@ -292,6 +303,13 @@ trait Trackable
             ->all();
 
         return hash('sha256', json_encode($rows, JSON_THROW_ON_ERROR));
+    }
+
+    protected function supportsRowHashing(string $table, string $column): bool
+    {
+        return collect(Schema::getIndexes($table))
+            ->contains(fn (array $index): bool => (($index['primary'] ?? false) || ($index['unique'] ?? false))
+                && ($index['columns'] ?? []) === [$column]);
     }
 
     /**

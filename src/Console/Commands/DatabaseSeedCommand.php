@@ -137,11 +137,6 @@ class DatabaseSeedCommand extends SeedCommand
     protected function showStatus(): int
     {
         $class = $this->argument('class');
-
-        if (! $class && $this->input->hasParameterOption('--class')) {
-            $class = $this->option('class');
-        }
-
         $rows = $this->seederStatusService->rows($class);
 
         if ($rows === []) {

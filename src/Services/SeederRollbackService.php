@@ -170,7 +170,9 @@ class SeederRollbackService
             }
         }
 
-        if ($execution->record_hash && $trackedRecords !== [] && $execution->record_hash !== $this->hashTrackedRecords($trackedRecords)) {
+        $recordHash = $trackedRecords === [] ? null : $this->hashTrackedRecords($trackedRecords);
+
+        if ($execution->record_hash && $recordHash && $execution->record_hash !== $recordHash) {
             $warnings[] = sprintf(
                 '%s tracked records drifted since the last seed run; rollback may affect manually edited data.',
                 class_basename($execution->seeder),
@@ -225,9 +227,18 @@ class SeederRollbackService
     /**
      * @param  array<string, array<string, list<int|string>>>  $trackedRecords
      */
-    protected function hashTrackedRecords(array $trackedRecords): string
+    protected function hashTrackedRecords(array $trackedRecords): ?string
     {
         $normalizedRecords = $this->normalizeTrackedRecords($trackedRecords);
+
+        foreach ($normalizedRecords as $table => $columns) {
+            foreach (array_keys($columns) as $column) {
+                if (! $this->supportsRowHashing($table, $column)) {
+                    return null;
+                }
+            }
+        }
+
         $rows = collect($normalizedRecords)
             ->mapWithKeys(function (array $columns, string $table): array {
                 $serializedColumns = collect($columns)->map(function (array $ids, string $column) use ($table): array {
@@ -250,6 +261,13 @@ class SeederRollbackService
             ->all();
 
         return hash('sha256', json_encode($rows, JSON_THROW_ON_ERROR));
+    }
+
+    protected function supportsRowHashing(string $table, string $column): bool
+    {
+        return collect(Schema::getIndexes($table))
+            ->contains(fn (array $index): bool => (($index['primary'] ?? false) || ($index['unique'] ?? false))
+                && ($index['columns'] ?? []) === [$column]);
     }
 
     /**
