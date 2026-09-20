@@ -15,7 +15,9 @@ class SeederStatusService
     public function rows(?string $class = null): array
     {
         $seeders = collect($this->seederDiscoveryService->discover($class))
-            ->merge($class ? [] : $this->seederExecutionService->getTrackedSeederClasses()->all())
+            ->merge($class
+                ? $this->seederExecutionService->getTrackedSeederClasses()->filter(fn (string $trackedClass): bool => $trackedClass === $class)->all()
+                : $this->seederExecutionService->getTrackedSeederClasses()->all())
             ->unique()
             ->sort()
             ->values();

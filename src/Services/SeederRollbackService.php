@@ -149,12 +149,25 @@ class SeederRollbackService
     {
         $warnings = [];
         $currentSeederHash = $this->hashSeeder($seeder);
+        $missingTrackedRows = $this->findMissingTrackedRows($trackedRecords);
 
         if ($execution->seeder_hash && $currentSeederHash && $execution->seeder_hash !== $currentSeederHash) {
             $warnings[] = sprintf(
                 '%s changed since it last ran; verify the rollback still matches the seeded data.',
                 class_basename($execution->seeder),
             );
+        }
+
+        foreach ($missingTrackedRows as $table => $columns) {
+            foreach ($columns as $column => $ids) {
+                $warnings[] = sprintf(
+                    '%s is missing tracked %s %s IDs [%s]; rollback may be operating on partially removed data.',
+                    class_basename($execution->seeder),
+                    $table,
+                    $column,
+                    implode(', ', $ids),
+                );
+            }
         }
 
         if ($execution->record_hash && $trackedRecords !== [] && $execution->record_hash !== $this->hashTrackedRecords($trackedRecords)) {
@@ -165,6 +178,37 @@ class SeederRollbackService
         }
 
         return $warnings;
+    }
+
+    /**
+     * @param  array<string, array<string, list<int|string>>>  $trackedRecords
+     * @return array<string, array<string, list<int|string>>>
+     */
+    protected function findMissingTrackedRows(array $trackedRecords): array
+    {
+        $missingRows = [];
+
+        foreach ($this->normalizeTrackedRecords($trackedRecords) as $table => $columns) {
+            foreach ($columns as $column => $ids) {
+                if ($ids === []) {
+                    continue;
+                }
+
+                $existingIds = DB::table($table)
+                    ->whereIn($column, $ids)
+                    ->pluck($column)
+                    ->map(fn (mixed $id): string|int => $id)
+                    ->all();
+
+                $missingIds = array_values(array_diff($ids, $existingIds));
+
+                if ($missingIds !== []) {
+                    $missingRows[$table][$column] = $missingIds;
+                }
+            }
+        }
+
+        return $missingRows;
     }
 
     protected function hashSeeder(object $seeder): ?string

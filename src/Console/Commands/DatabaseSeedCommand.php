@@ -4,6 +4,7 @@ namespace Riftweb\SuperSeeder\Console\Commands;
 
 use Illuminate\Database\ConnectionResolverInterface as Resolver;
 use Illuminate\Database\Console\Seeds\SeedCommand;
+use ReflectionClass;
 use Riftweb\SuperSeeder\Exceptions\RollbackBlockedException;
 use Riftweb\SuperSeeder\Services\SeederExecutionService;
 use Riftweb\SuperSeeder\Services\SeederStatusService;
@@ -216,8 +217,11 @@ class DatabaseSeedCommand extends SeedCommand
             return true;
         }
 
-        $instance = app($seeder);
-        $seederTags = method_exists($instance, 'seederTags') ? $instance->seederTags() : [];
+        $seederTags = [];
+
+        if (class_exists($seeder)) {
+            $seederTags = (array) ((new ReflectionClass($seeder))->getDefaultProperties()['tags'] ?? []);
+        }
 
         return array_intersect($tags, $seederTags) !== [];
     }
