@@ -12,6 +12,11 @@ return new class extends Migration
             $table->id();
             $table->string('seeder')->index();
             $table->integer('batch')->index();
+            $table->string('status')->default('ran');
+            $table->unsignedBigInteger('execution_time_ms')->nullable();
+            $table->json('tracked_records')->nullable();
+            $table->string('record_hash')->nullable();
+            $table->string('seeder_hash')->nullable();
             $table->timestamp('created_at')->useCurrent();
         });
     }

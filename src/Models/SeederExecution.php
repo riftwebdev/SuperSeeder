@@ -11,12 +11,19 @@ class SeederExecution extends Model
     protected $fillable = [
         'seeder',
         'batch',
+        'status',
+        'execution_time_ms',
+        'tracked_records',
+        'record_hash',
+        'seeder_hash',
     ];
 
     public function casts(): array
     {
         return [
             'batch' => 'int',
+            'execution_time_ms' => 'int',
+            'tracked_records' => 'array',
             'created_at' => 'datetime',
         ];
     }

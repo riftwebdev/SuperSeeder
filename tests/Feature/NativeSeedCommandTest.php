@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Riftweb\SuperSeeder\Models\SeederExecution;
+use Tests\Fixtures\MultiTrackableRootSeeder;
+use Tests\Fixtures\TransactionalFailureSeeder;
 use Tests\Fixtures\TrackableTestSeeder;
 
 function runTrackableSeeder(): void
@@ -30,6 +32,22 @@ it('reruns tracked seeders when requested', function (): void {
 
     expect(DB::table('superseeder_test_records')->count())->toBe(2)
         ->and(SeederExecution::where('seeder', TrackableTestSeeder::class)->count())->toBe(2);
+});
+
+it('shows status for a trackable seeder', function (): void {
+    $this->artisan('db:seed', [
+        '--status' => true,
+        '--class' => TrackableTestSeeder::class,
+    ])->expectsOutputToContain('Pending')
+        ->assertExitCode(0);
+
+    runTrackableSeeder();
+
+    $this->artisan('db:seed:status', [
+        'class' => TrackableTestSeeder::class,
+    ])->expectsOutputToContain('Ran')
+        ->expectsOutputToContain('TrackableTestSeeder')
+        ->assertExitCode(0);
 });
 
 it('clears tracking after confirmation', function (): void {
@@ -101,5 +119,43 @@ it('blocks rollback when a foreign key references seeded records', function (): 
 
     expect(DB::table('superseeder_test_records')->count())->toBe(0)
         ->and(DB::table('superseeder_test_dependencies')->count())->toBe(0)
+        ->and(SeederExecution::query()->count())->toBe(0);
+});
+
+it('filters seeders by tag and environment', function (): void {
+    $this->artisan('db:seed', [
+        '--class' => MultiTrackableRootSeeder::class,
+        '--tag' => ['roles'],
+    ])->assertExitCode(0);
+
+    expect(DB::table('superseeder_test_records')->pluck('name')->all())
+        ->toBe(['role-seeded'])
+        ->and(SeederExecution::pluck('seeder')->all())
+        ->toBe([Tests\Fixtures\TaggedTrackableTestSeeder::class]);
+});
+
+it('rolls back only the tagged seeders from the latest batch', function (): void {
+    $this->artisan('db:seed', [
+        '--class' => MultiTrackableRootSeeder::class,
+    ])->assertExitCode(0);
+
+    $this->artisan('db:seed', [
+        '--rollback' => true,
+        '--tag' => ['records'],
+        '--force' => true,
+    ])->assertExitCode(0);
+
+    expect(DB::table('superseeder_test_records')->pluck('name')->all())
+        ->toBe(['role-seeded'])
+        ->and(SeederExecution::pluck('seeder')->all())
+        ->toBe([Tests\Fixtures\TaggedTrackableTestSeeder::class]);
+});
+
+it('wraps trackable seeder execution in a transaction by default', function (): void {
+    $this->artisan('db:seed', [
+        '--class' => TransactionalFailureSeeder::class,
+    ])->assertExitCode(1);
+
+    expect(DB::table('superseeder_test_records')->where('name', 'transaction-failed')->count())->toBe(0)
         ->and(SeederExecution::query()->count())->toBe(0);
 });

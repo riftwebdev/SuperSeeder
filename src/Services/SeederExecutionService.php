@@ -30,11 +30,15 @@ class SeederExecutionService
         return $this->seederExecutionRepository->seederDoesntExists($seeder);
     }
 
-    public function store(string $seeder, int $batch): ?SeederExecution
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    public function store(string $seeder, int $batch, array $attributes = []): ?SeederExecution
     {
         return $this->seederExecutionRepository->store([
             'seeder' => $seeder,
             'batch' => $batch,
+            ...$attributes,
         ]);
     }
 
@@ -43,8 +47,23 @@ class SeederExecutionService
         return $this->seederExecutionRepository->getByBatch($batch);
     }
 
-    public function deleteBySeeder(string $seeder): bool
+    public function getLatestExecutionForSeeder(string $seeder): ?SeederExecution
     {
-        return $this->seederExecutionRepository->deleteBySeeder($seeder);
+        return $this->seederExecutionRepository->getLatestExecutionForSeeder($seeder);
+    }
+
+    public function getLatestExecutions(): Collection
+    {
+        return $this->seederExecutionRepository->getLatestExecutions();
+    }
+
+    public function getTrackedSeederClasses(): Collection
+    {
+        return $this->seederExecutionRepository->getTrackedSeederClasses();
+    }
+
+    public function deleteExecution(int $id): bool
+    {
+        return $this->seederExecutionRepository->deleteExecution($id);
     }
 }

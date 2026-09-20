@@ -5,16 +5,16 @@ namespace Tests\Fixtures;
 use Illuminate\Database\Seeder;
 use Riftweb\SuperSeeder\Traits\Trackable;
 
-class TrackableTestSeeder extends Seeder
+class ProductionOnlyTrackableTestSeeder extends Seeder
 {
     use Trackable;
 
-    protected array $tags = ['records'];
+    protected array $environments = ['production'];
 
     protected function up(): void
     {
         $this->track(SuperSeederTestRecord::create([
-            'name' => 'seeded',
+            'name' => 'production-only',
         ]));
     }
 
@@ -22,7 +22,7 @@ class TrackableTestSeeder extends Seeder
     {
         $this->pruneModels(
             SuperSeederTestRecord::class,
-            SuperSeederTestRecord::query()->where('name', 'seeded')->get(),
+            SuperSeederTestRecord::query()->where('name', 'production-only')->get(),
             false,
         );
     }
