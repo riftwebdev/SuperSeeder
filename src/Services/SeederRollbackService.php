@@ -35,7 +35,6 @@ class SeederRollbackService
             $instance = app($seeder);
             $trackedRecords = $this->resolveTrackedRecords($execution);
             $dependencies = $this->findDependencies($trackedRecords);
-            $warnings = [...$warnings, ...$this->driftWarnings($instance, $execution, $trackedRecords)];
 
             if ($dependencies->isNotEmpty() && ! $cascade) {
                 $dependency = $dependencies->first();
@@ -49,6 +48,8 @@ class SeederRollbackService
                     implode(', ', $dependency['ids']),
                 ));
             }
+
+            $warnings = [...$warnings, ...$this->driftWarnings($instance, $execution, $trackedRecords)];
 
             if (! $dryRun) {
                 $callback = function () use ($dependencies, $instance, $execution, $seeder): void {
