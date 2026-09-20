@@ -52,15 +52,15 @@ class SeederRollbackService
 
             if (! $dryRun) {
                 $callback = function () use ($dependencies, $instance, $execution, $seeder): void {
-                    if (! $this->seederExecutionService->deleteExecution($execution->id)) {
-                        throw new RuntimeException(sprintf('Unable to remove the tracking record for %s.', $seeder));
-                    }
-
                     if ($dependencies->isNotEmpty()) {
                         $this->deleteDependencies($dependencies);
                     }
 
                     $instance->down();
+
+                    if (! $this->seederExecutionService->deleteExecution($execution->id)) {
+                        throw new RuntimeException(sprintf('Unable to remove the tracking record for %s.', $seeder));
+                    }
                 };
 
                 DB::transaction($callback);

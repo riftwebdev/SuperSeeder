@@ -45,10 +45,6 @@ class SeederDiscoveryService
 
     protected function seedersPath(): ?string
     {
-        if ($configuredPath = config('superseeder.seeders_path')) {
-            return $configuredPath;
-        }
-
         if (function_exists('database_path')) {
             return database_path('seeders');
         }

@@ -157,7 +157,7 @@ class DatabaseSeedCommand extends SeedCommand
         }
 
         $this->seederExecutorService->setForce(false);
-        $this->seederExecutorService->setTags($this->tags());
+        $this->seederExecutorService->setTags([]);
 
         return parent::handle();
     }

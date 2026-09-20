@@ -4,7 +4,6 @@ namespace Riftweb\SuperSeeder\Traits;
 
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +20,11 @@ trait Trackable
     protected array $tracked = [];
 
     protected bool $trackedRecordsRequireUniqueColumns = false;
+
+    /**
+     * @var array<class-string, bool>
+     */
+    protected static array $legacySeededRecordsOverrides = [];
 
     public function run(): void
     {
@@ -131,14 +135,8 @@ trait Trackable
         }
 
         $query = $modelClass::query()->whereKey($keys);
-        $usesSoftDeletes = in_array(SoftDeletes::class, class_uses_recursive($modelClass), true);
-
         if ($force === true && method_exists($query, 'forceDelete')) {
             return $query->forceDelete();
-        }
-
-        if ($force === false || ! $usesSoftDeletes) {
-            return $query->delete();
         }
 
         return $query->delete();
@@ -273,7 +271,8 @@ trait Trackable
 
     protected function hasLegacySeededRecordsOverride(): bool
     {
-        return (new ReflectionClass($this))->getMethod('seededRecords')->getFileName() !== __FILE__;
+        return self::$legacySeededRecordsOverrides[static::class]
+            ??= (new ReflectionClass($this))->getMethod('seededRecords')->getFileName() !== __FILE__;
     }
 
     protected function hashSeederClass(): ?string

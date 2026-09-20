@@ -187,7 +187,6 @@ return [
     'bypass' => false,
     'table' => 'seeder_executions',
     'use_timestamped_seeders' => true,
-    'seeders_path' => null,
     'rollback' => [
         'production_enabled' => false,
     ],
