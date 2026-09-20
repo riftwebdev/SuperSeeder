@@ -159,6 +159,10 @@ class SeederRollbackService
             }
         }
 
+        if ($missingTrackedRows !== []) {
+            return $warnings;
+        }
+
         $recordHash = $trackedRecords === []
             ? null
             : $this->trackedRecordHashService->hash(
