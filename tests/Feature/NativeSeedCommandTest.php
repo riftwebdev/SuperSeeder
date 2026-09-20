@@ -131,7 +131,9 @@ it('filters seeders by tag and environment', function (): void {
     expect(DB::table('superseeder_test_records')->pluck('name')->all())
         ->toBe(['role-seeded'])
         ->and(SeederExecution::pluck('seeder')->all())
-        ->toBe([Tests\Fixtures\TaggedTrackableTestSeeder::class]);
+        ->toBe([Tests\Fixtures\TaggedTrackableTestSeeder::class])
+        ->and(SeederExecution::where('seeder', Tests\Fixtures\ProductionOnlyTrackableTestSeeder::class)->doesntExist())
+        ->toBeTrue();
 });
 
 it('rolls back only the tagged seeders from the latest batch', function (): void {

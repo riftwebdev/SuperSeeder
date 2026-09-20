@@ -12,6 +12,7 @@ use Riftweb\SuperSeeder\Services\SeederExecutionService;
 use Riftweb\SuperSeeder\Services\SeederExecutorService;
 use Riftweb\SuperSeeder\Services\SeederRollbackService;
 use Riftweb\SuperSeeder\Services\SeederStatusService;
+use Riftweb\SuperSeeder\Services\TrackedRecordHashService;
 
 class RiftSuperSeederServiceProvider extends ServiceProvider
 {
@@ -45,6 +46,7 @@ class RiftSuperSeederServiceProvider extends ServiceProvider
 
         $this->app->singleton(SeederDiscoveryService::class);
         $this->app->singleton(SeederStatusService::class);
+        $this->app->singleton(TrackedRecordHashService::class);
         $this->app->singleton(SeederRollbackService::class);
     }
 

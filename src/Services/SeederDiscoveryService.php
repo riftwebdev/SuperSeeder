@@ -61,7 +61,8 @@ class SeederDiscoveryService
             $relativePath,
         );
 
-        $namespace = app()->getNamespace().'Database\\Seeders\\';
+        $namespace = config('superseeder.seeders_namespace')
+            ?: app()->getNamespace().'Database\\Seeders\\';
 
         return $classSuffix === '' ? null : $namespace.$classSuffix;
     }

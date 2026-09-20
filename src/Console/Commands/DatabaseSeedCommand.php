@@ -38,7 +38,7 @@ class DatabaseSeedCommand extends SeedCommand
 
     public function handle(): int
     {
-        $this->seederExecutorService->setTags([]);
+        $this->seederExecutorService->setTags($this->tags());
 
         $operations = collect(['rollback', 'fresh', 'clear', 'status'])
             ->filter(fn (string $operation): bool => $this->option($operation));

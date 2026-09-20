@@ -31,10 +31,16 @@ class TrackedRecordHashService
                         return [$column => []];
                     }
 
+                    $query = DB::table($table)
+                        ->whereIn($column, $ids)
+                        ->orderBy($column);
+
+                    if ($primaryKey = $this->primaryKeyColumn($table)) {
+                        $query->orderBy($primaryKey);
+                    }
+
                     return [
-                        $column => DB::table($table)
-                            ->whereIn($column, $ids)
-                            ->orderBy($column)
+                        $column => $query
                             ->get()
                             ->map(fn (object $row): array => (array) $row)
                             ->all(),
@@ -110,5 +116,13 @@ class TrackedRecordHashService
         return collect(Schema::getIndexes($table))
             ->contains(fn (array $index): bool => (($index['primary'] ?? false) || ($index['unique'] ?? false))
                 && ($index['columns'] ?? []) === [$column]);
+    }
+
+    protected function primaryKeyColumn(string $table): ?string
+    {
+        $primaryIndex = collect(Schema::getIndexes($table))
+            ->first(fn (array $index): bool => ($index['primary'] ?? false) && count($index['columns'] ?? []) === 1);
+
+        return $primaryIndex['columns'][0] ?? null;
     }
 }
