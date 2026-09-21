@@ -4,11 +4,15 @@ namespace Riftweb\SuperSeeder\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Riftweb\SuperSeeder\Console\Commands\DatabaseSeedCommand;
+use Riftweb\SuperSeeder\Console\Commands\DatabaseSeedStatusCommand;
 use Riftweb\SuperSeeder\Console\Commands\TrackableSeederMakeCommand;
 use Riftweb\SuperSeeder\Repositories\SeederExecutionRepository;
+use Riftweb\SuperSeeder\Services\SeederDiscoveryService;
 use Riftweb\SuperSeeder\Services\SeederExecutionService;
 use Riftweb\SuperSeeder\Services\SeederExecutorService;
 use Riftweb\SuperSeeder\Services\SeederRollbackService;
+use Riftweb\SuperSeeder\Services\SeederStatusService;
+use Riftweb\SuperSeeder\Services\TrackedRecordHashService;
 
 class RiftSuperSeederServiceProvider extends ServiceProvider
 {
@@ -22,6 +26,7 @@ class RiftSuperSeederServiceProvider extends ServiceProvider
         // Register commands
         $this->commands([
             DatabaseSeedCommand::class,
+            DatabaseSeedStatusCommand::class,
             TrackableSeederMakeCommand::class,
         ]);
 
@@ -39,6 +44,9 @@ class RiftSuperSeederServiceProvider extends ServiceProvider
         });
         $this->app->alias(SeederExecutorService::class, 'superseeder.executor');
 
+        $this->app->singleton(SeederDiscoveryService::class);
+        $this->app->singleton(SeederStatusService::class);
+        $this->app->singleton(TrackedRecordHashService::class);
         $this->app->singleton(SeederRollbackService::class);
     }
 

@@ -3,26 +3,27 @@
 namespace Tests\Fixtures;
 
 use Illuminate\Database\Seeder;
+use RuntimeException;
 use Riftweb\SuperSeeder\Traits\Trackable;
 
-class TrackableTestSeeder extends Seeder
+class TransactionalFailureSeeder extends Seeder
 {
     use Trackable;
-
-    protected array $tags = ['records'];
 
     protected function up(): void
     {
         $this->track(SuperSeederTestRecord::create([
-            'name' => 'seeded',
+            'name' => 'transaction-failed',
         ]));
+
+        throw new RuntimeException('Seeder failed during execution.');
     }
 
     public function down(): void
     {
         $this->pruneModels(
             SuperSeederTestRecord::class,
-            SuperSeederTestRecord::query()->where('name', 'seeded')->get(),
+            SuperSeederTestRecord::query()->where('name', 'transaction-failed')->get(),
             false,
         );
     }

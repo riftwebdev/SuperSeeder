@@ -16,6 +16,7 @@ using Laravel's familiar `make:seeder` and `db:seed` commands.
 
 - Skip seeders that have already completed successfully.
 - Keep a batch history in `seeder_executions`.
+- Inspect ran vs pending seeders from the CLI.
 - Roll back the latest batch in reverse order.
 - Preview rollbacks before modifying data.
 - Block rollbacks when declared seeded records have foreign-key dependants.
@@ -61,14 +62,22 @@ class PaymentMethodSeeder extends Seeder
 {
     use Trackable;
 
+    protected array $tags = ['billing'];
+    protected array $environments = ['local', 'staging'];
+
     protected function up(): void
     {
-        // Create your records.
+        $this->track(PaymentMethod::query()->create([
+            'name' => 'Wire Transfer',
+        ]));
     }
 
     public function down(): void
     {
-        // Remove only the records created by this seeder.
+        $this->pruneModels(
+            PaymentMethod::class,
+            PaymentMethod::query()->where('name', 'Wire Transfer')->get(),
+        );
     }
 }
 ```
@@ -99,8 +108,11 @@ that seeder automatically.
 | --- | --- |
 | `php artisan make:seeder Name --trackable` | Generate a trackable seeder. |
 | `php artisan db:seed` | Run seeders that have not been tracked. |
+| `php artisan db:seed --status` / `php artisan db:seed:status` | Show trackable seeders, execution status, batch, timing, and last execution date. |
+| `php artisan db:seed --tag=permissions` | Run only the seeders assigned to the given tag. |
 | `php artisan db:seed --rerun` | Run tracked seeders again and record a new execution. |
 | `php artisan db:seed --rollback` | Roll back the latest tracked batch. |
+| `php artisan db:seed --rollback --tag=permissions` | Roll back only the latest-batch seeders assigned to the given tag. |
 | `php artisan db:seed --rollback --dry-run` | Preview the latest rollback without changing data. |
 | `php artisan db:seed --fresh` | Clear tracking, then rerun all trackable seeders. |
 | `php artisan db:seed --clear` | Clear tracking without running seeders. |
@@ -111,11 +123,21 @@ they also require `--force`.
 ## Safe rollbacks
 
 A rollback calls each seeder's `down()` method and deletes its tracking record.
-Write `down()` defensively: target only records the seeder owns, never broad
-tables or shared data.
+By default, the `Trackable` trait wraps `up()` in a transaction, and the
+rollback service wraps rollback execution in a transaction as well; set
+`public bool $withinTransaction = false;` on the seeder to opt out of tracked
+seed execution transactions. Write `down()` defensively: target only records
+the seeder owns, never broad tables or shared data.
 
-SuperSeeder can identify foreign-key dependants before calling `down()`. Return
-the primary keys your seeder created from `seededRecords()`:
+SuperSeeder can identify foreign-key dependants before calling `down()`. The
+easiest option is to capture created models as they are seeded:
+
+```php
+$this->track(User::factory()->count(5)->create());
+```
+
+For non-Eloquent workflows, you can still return the primary keys your seeder
+created from `seededRecords()`:
 
 ```php
 public function seededRecords(): array
@@ -136,6 +158,10 @@ It deletes those records before calling the seeder's `down()` method:
 php artisan db:seed --rollback --dry-run
 php artisan db:seed --rollback --cascade
 ```
+
+SuperSeeder also stores execution hashes for the seeder file and tracked rows.
+When a rollback sees drift, it warns before continuing so you can review
+manually edited data first.
 
 Rollbacks require `--force` outside local environments. In production, they
 are disabled unless explicitly enabled:

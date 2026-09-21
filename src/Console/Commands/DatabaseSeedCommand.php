@@ -6,6 +6,7 @@ use Illuminate\Database\ConnectionResolverInterface as Resolver;
 use Illuminate\Database\Console\Seeds\SeedCommand;
 use Riftweb\SuperSeeder\Exceptions\RollbackBlockedException;
 use Riftweb\SuperSeeder\Services\SeederExecutionService;
+use Riftweb\SuperSeeder\Services\SeederStatusService;
 use Riftweb\SuperSeeder\Services\SeederExecutorService;
 use Riftweb\SuperSeeder\Services\SeederRollbackService;
 
@@ -21,20 +22,25 @@ class DatabaseSeedCommand extends SeedCommand
                     {--fresh : Clear SuperSeeder tracking and rerun all trackable seeders}
                     {--clear : Clear all SuperSeeder tracking records}
                     {--dry-run : Show rollback effects without making changes}
-                    {--cascade : Allow rollback when dependent records exist}';
+                    {--cascade : Allow rollback when dependent records exist}
+                    {--status : Show SuperSeeder execution status}
+                    {--tag=* : Only run or rollback seeders with the given tag(s)}';
 
     public function __construct(
         Resolver $resolver,
         protected SeederExecutionService $seederExecutionService,
         protected SeederExecutorService $seederExecutorService,
         protected SeederRollbackService $seederRollbackService,
+        protected SeederStatusService $seederStatusService,
     ) {
         parent::__construct($resolver);
     }
 
     public function handle(): int
     {
-        $operations = collect(['rollback', 'fresh', 'clear'])
+        $this->seederExecutorService->setTags($this->tags());
+
+        $operations = collect(['rollback', 'fresh', 'clear', 'status'])
             ->filter(fn (string $operation): bool => $this->option($operation));
 
         if ($operations->count() > 1) {
@@ -49,6 +55,10 @@ class DatabaseSeedCommand extends SeedCommand
             return self::FAILURE;
         }
 
+        if ($this->option('status')) {
+            return $this->showStatus();
+        }
+
         if ($this->option('fresh')) {
             return $this->runFreshSeeders();
         }
@@ -59,6 +69,7 @@ class DatabaseSeedCommand extends SeedCommand
 
         if (! $this->option('rollback')) {
             $this->seederExecutorService->setForce($this->option('rerun'));
+            $this->seederExecutorService->setTags($this->tags());
 
             return parent::handle();
         }
@@ -83,15 +94,30 @@ class DatabaseSeedCommand extends SeedCommand
             return self::SUCCESS;
         }
 
-        $seeders = $this->seederExecutionService->getByBatch($batch)
-            ->pluck('seeder')
-            ->all();
+        $executions = collect();
 
-        $this->info(sprintf('Rolling back batch #%d (%d seeder(s))', $batch, count($seeders)));
+        while ($batch > 0 && $executions->isEmpty()) {
+            $executions = $this->seederExecutionService->getByBatch($batch)
+                ->filter(fn ($execution): bool => $this->matchesRequestedTags($execution))
+                ->sortByDesc('id')
+                ->values();
+
+            if ($executions->isEmpty()) {
+                $batch--;
+            }
+        }
+
+        if ($executions->isEmpty()) {
+            $this->info('No seeders matched the requested rollback scope.');
+
+            return self::SUCCESS;
+        }
+
+        $this->info(sprintf('Rolling back batch #%d (%d seeder(s))', $batch, $executions->count()));
 
         try {
-            $rolledBackSeeders = $this->seederRollbackService->rollbackBatch(
-                $seeders,
+            $rollbackResult = $this->seederRollbackService->rollbackBatch(
+                $executions,
                 $this->option('dry-run'),
                 $this->option('cascade'),
             );
@@ -101,7 +127,11 @@ class DatabaseSeedCommand extends SeedCommand
             return self::FAILURE;
         }
 
-        foreach ($rolledBackSeeders as $seeder) {
+        foreach ($rollbackResult['warnings'] as $warning) {
+            $this->warn($warning);
+        }
+
+        foreach ($rollbackResult['seeders'] as $seeder) {
             $this->line(sprintf(
                 '%s: %s',
                 $this->option('dry-run') ? 'Would rollback' : 'Rollback',
@@ -114,6 +144,22 @@ class DatabaseSeedCommand extends SeedCommand
         return self::SUCCESS;
     }
 
+    protected function showStatus(): int
+    {
+        $class = $this->argument('class');
+        $rows = $this->seederStatusService->rows($class);
+
+        if ($rows === []) {
+            $this->info('No trackable seeders found.');
+
+            return self::SUCCESS;
+        }
+
+        $this->table(['Seeder', 'Status', 'Batch', 'Time', 'Executed At'], $rows);
+
+        return self::SUCCESS;
+    }
+
     protected function runFreshSeeders(): int
     {
         if (! $this->confirmAndClearTracking('This will clear all SuperSeeder tracking records and rerun every trackable seeder. Continue?')) {
@@ -121,6 +167,7 @@ class DatabaseSeedCommand extends SeedCommand
         }
 
         $this->seederExecutorService->setForce(false);
+        $this->seederExecutorService->setTags([]);
 
         return parent::handle();
     }
@@ -157,5 +204,26 @@ class DatabaseSeedCommand extends SeedCommand
         }
 
         return true;
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function tags(): array
+    {
+        return array_values(array_filter((array) $this->option('tag'), fn (?string $tag): bool => filled($tag)));
+    }
+
+    protected function matchesRequestedTags(object $execution): bool
+    {
+        $tags = $this->tags();
+
+        if ($tags === []) {
+            return true;
+        }
+
+        return is_array($execution->tags)
+            && $execution->tags !== []
+            && array_intersect($tags, $execution->tags) !== [];
     }
 }

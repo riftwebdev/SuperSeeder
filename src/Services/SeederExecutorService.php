@@ -8,6 +8,11 @@ class SeederExecutorService
 
     protected bool $force = false;
 
+    /**
+     * @var list<string>
+     */
+    protected array $tags = [];
+
     public function __construct(
         protected SeederExecutionService $seederExecutionService
     ) {}
@@ -22,6 +27,24 @@ class SeederExecutorService
     public function isForced(): bool
     {
         return $this->force;
+    }
+
+    /**
+     * @param  list<string>  $tags
+     */
+    public function setTags(array $tags): self
+    {
+        $this->tags = array_values(array_unique(array_filter($tags, fn (?string $tag): bool => filled($tag))));
+
+        return $this;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function requestedTags(): array
+    {
+        return $this->tags;
     }
 
     public function clear(): bool
